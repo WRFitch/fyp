@@ -2,6 +2,10 @@
 # wrapper script for FYP env operations 
 
 main(){
+	DIR=/src/fyp/qol_scripts
+	echo "please ensure this repo is installed under $DIR"
+		
+	cd $DIR
 	if [ $FYP_COMMAND == "up" ]; then
 		./fyp_env_up.sh
 	elif [ "$FYP_COMMAND" == "down" ]; then 
