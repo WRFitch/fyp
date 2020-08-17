@@ -6,4 +6,7 @@
 - Meta-analysis of climate factors to look for distinct problem areas socially, economically or geographically
 - More expedient simulations 
   - _Presumably the earth simulator guys are a little better at this than some undergrad_
+  - Creating a better simulation that can plug into an AI agent could better improve the agent's understanding of the world, allowing for more flexible & complete training regimens. 
 - Neural meta-network. A net that can plug into crucial nodes in other networks and develop more sophisticated understanding of their function and performance, as well as coming to more sophisticated conclusions about the combined output of both networks. Combining NLP, speech recognition and facial mood recognition to generate a better understanding of sentiment springs to mind. 
+- A robot that can manage an existing ecosystem by comparing its current state to existing projections. This can then be used to control automated forager drones to manage a permaculture such as an agroforest. This could also include those neato mosquito-slaying laser drones. 
+- creating a soil biodiversity simulator 
