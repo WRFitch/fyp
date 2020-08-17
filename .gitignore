@@ -6,3 +6,4 @@
 
 # misc
 /tmp/*
+*.code-workspace
