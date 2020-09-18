@@ -11,3 +11,4 @@ I should probably check Kaggle and steal everything I can get my hands on (legal
 - [UEA Climate Research Unit](http://www.cru.uea.ac.uk/data)
 - [Historic weather data for the UK](https://dpds.weatheronline.co.uk/historical_data/weather_stations_download/#forward)
 - [The Ecological Data Wiki. It's a wiki for ecological data.](https://ecologicaldata.org/)
+- [climatechange.ai resource list](https://www.climatechange.ai/resources)
