@@ -12,3 +12,5 @@ I should probably check Kaggle and steal everything I can get my hands on (legal
 - [Historic weather data for the UK](https://dpds.weatheronline.co.uk/historical_data/weather_stations_download/#forward)
 - [The Ecological Data Wiki. It's a wiki for ecological data.](https://ecologicaldata.org/)
 - [climatechange.ai resource list](https://www.climatechange.ai/resources)
+- [A global dataset of co2 emissions and ancillary data related to emissions for 343 cities](https://www.nature.com/articles/sdata2018280)
+- [UNDATA GHG emissions without land use, land-use change and forestry in kT CO2 equivalent](http://data.un.org/Data.aspx?q=greenhouse+gas&d=GHG&f=seriesID%3aGHG)
