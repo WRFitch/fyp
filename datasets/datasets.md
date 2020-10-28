@@ -14,3 +14,4 @@ I should probably check Kaggle and steal everything I can get my hands on (legal
 - [climatechange.ai resource list](https://www.climatechange.ai/resources)
 - [A global dataset of co2 emissions and ancillary data related to emissions for 343 cities](https://www.nature.com/articles/sdata2018280)
 - [UNDATA GHG emissions without land use, land-use change and forestry in kT CO2 equivalent](http://data.un.org/Data.aspx?q=greenhouse+gas&d=GHG&f=seriesID%3aGHG)
+- [owid master list](https://github.com/owid/owid-datasets/tree/master/datasets)
