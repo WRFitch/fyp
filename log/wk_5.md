@@ -6,3 +6,6 @@ Week 5 Log
 - data sourcing continues to be an issue
 - started a weekly project log
 - creating a narrative structure for this project the way Allan suggested is challenging - does telling the story of this experiment really make for good science?
+- This project isn't necessarily the most important project to be working on. As this project progresses, I should keep a list of other valuable projects to keep in mind for future work, as well as looking for jobs in this sphere.
+- Pricing local GHG concentrations can be used in QoL indices and property prices
+ 
