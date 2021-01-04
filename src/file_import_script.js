@@ -25,14 +25,14 @@ var british_isles = /* color: #d63000 */ee.Geometry.Polygon(
           [0.3093542250131076, 51.30673830188811],
           [0.3944982679818576, 51.58576108751857],
           [0.0017370375131076088, 51.76629738492925]]]);
-          
+
 // Import satellite photography dataset 
 function maskS2clouds(image) {
   var qa = image.select('QA60');
 
   // Bits 10 and 11 are clouds and cirrus, respectively.
-  var cloudBitMask = 1 << 10
-  var cirrusBitMask = 1 << 11
+  var cloudBitMask = 1 << 10;
+  var cirrusBitMask = 1 << 11;
 
   // Both flags should be set to zero, indicating clear conditions.
   var mask = qa.bitwiseAnd(cloudBitMask).eq(0) 
@@ -41,33 +41,68 @@ function maskS2clouds(image) {
   return image.updateMask(mask).divide(10000);
 }
 
-// Pre-filter to get less cloudy granules.
-var dataset = ee.ImageCollection('COPERNICUS/S2_SR') 
-                  .filterDate('2020-01-01', '2020-01-30') 
-                  .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20)) 
-                  .map(maskS2clouds);
-
+//this function is client-side, so we have to import pictures here, then export them elsewhere. Best engineers in the world...
 function exportImg(image){
-  
-    return Export.image.toDrive({
+    Export.image.toDrive({
       image: image,
       description: 'img2drive',
       scale: 30,
       region: test_bounds
     });
+    print(image);
+    return image;
 }
 
-//todo rename 
-function importImgs(bounds){
-  print("getting images from ee")
+// given a polygon, download all the images defined in its range and export them to google drive. 
+function exportImgsFromPolygon(bounds){
+  print("getting images from ee");
 
+  // Pre-filter to get less cloudy granules.
   var dataset = ee.ImageCollection('COPERNICUS/S2_SR') 
                   .filterDate('2020-01-01', '2020-01-30') 
                   .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20)) 
                   .filterBounds(bounds) 
-                  .map(maskS2clouds)
-                  .map(exportImg);
-  return dataset
+                  .map(maskS2clouds);
+  
+  //update to import each image to this runner, then export them. 
+  var dataset2 = dataset;
+  ExportCol(dataset, "img_test", bounds);
+  
+  return dataset;
 }
 
-importImgs(test_bounds)
+// copying code from SO to see what will work 
+// this is slow and horrible for reasons I should have understood 
+var ExportCol = function(col, folder, scale, type,
+                         nimg, maxPixels, region) {
+    type = type || "float";
+    nimg = nimg || 500;
+    scale = scale || 1000;
+    maxPixels = maxPixels || 1e10;
+
+    var colList = col.toList(nimg);
+    var n = colList.size().getInfo();
+
+    for (var i = 0; i < n; i++) {
+      var img = ee.Image(colList.get(i));
+      var id = img.id().getInfo();
+      //region = region || img.geometry().bounds().getInfo()["coordinates"];
+
+      var imgtype = {"float":img.toFloat(), 
+                     "byte":img.toByte(), 
+                     "int":img.toInt(),
+                     "double":img.toDouble()
+                    };
+
+      Export.image.toDrive({
+        image:imgtype[type],
+        description: id,
+        folder: folder,
+        fileNamePrefix: id,
+        region: test_bounds,
+        scale: scale,
+        maxPixels: maxPixels});
+    }
+  };
+
+exportImgsFromPolygon(test_bounds);
