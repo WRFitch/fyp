@@ -4,6 +4,10 @@
 # code
 *.pyc
 
+# write-up
+disso/*
+Dissertation.docx
+
 # misc
 tmp/*
 *.code-workspace
