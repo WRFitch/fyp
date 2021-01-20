@@ -3,7 +3,7 @@
 After initial setup, the scripts in qol_scripts can be used to set up/teardown your environment, as long as this repo is stored in /src/fyp
 
 ### Cuda
-1. Buy & install a decent nVidia GPU. If you need me to explain this to you, you're fucked. 
+1. Buy & install a decent nVidia GPU. 
 1. Install NVIDIA CUDA Toolkit, available at http://developer.nvidia.com/cuda-downloads. On Ubuntu 18.04 x86_64, the instructions are as follows:
 
 ```
