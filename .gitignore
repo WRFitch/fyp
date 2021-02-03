@@ -12,3 +12,4 @@ Dissertation.docx
 tmp/*
 *.code-workspace
 .vscode
+credentials.json
