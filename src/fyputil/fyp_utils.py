@@ -1,3 +1,8 @@
+#==============================================================================
+# FYP UTILITIES
+# TODO rename to filename utilities
+#==============================================================================
+
 import constants as c
 
 import csv
@@ -62,7 +67,9 @@ def parseCsvCoords(csv_path):
 
 # removes old geoTIFF images or xml conversion artifacts from the given directory. 
 def rmArtifact(artifact_path, rmTif = False, rmXml = False):
-  if not os.path.isfile(artifact_path): return
+  if not os.path.isfile(artifact_path): 
+    print(f"{artifact_path} does not exist")
+    return
   if not (rmTif or rmXml): return
   
   extension = os.path.splitext(artifact_path)[1].lower()
@@ -130,37 +137,5 @@ def moveFilesByExtension(src, dest, extension):
       if split_path[1].lower() == extension:
         dest_path = full_path.replace(src, dest)
         os.rename(full_path, dest_path)
-
-# Extracts lat and long volumes from .geo param in csv. 
-def parseCsvCoords(csv_path):
-  print(csv_path)
-  test_suffix = "_parsing_coordinates.csv"
-  
-  with open(csv_path, 'r') as read_obj, \
-      open(csv_path + test_suffix, 'w', newline='') as write_obj:
-    csv_reader = csv.reader(read_obj, delimiter=",")
-    csv_writer = csv.writer(write_obj, delimiter=",")
-
-    firstRow = True
-    for row in csv_reader:
-      if firstRow: 
-        # break early if this method has already been applied to the given csv. 
-        if "longitude" in row: 
-          print(f"{csv_path} has already been processed - exiting...")
-          return 
-        row.append("longitude")
-        row.append("latitude")
-        firstRow = False
-      else:
-        # Could string parsing be made more efficient? 
-        # This method only needs to run once per csv so optimisation isn't that important. 
-        coords = json.loads(row[2]).get("coordinates")
-        row.append(coords[0])
-        row.append(coords[1])
-
-      csv_writer.writerow(row)
-  
-  os.remove(csv_path)
-  os.rename(csv_path + test_suffix, csv_path)
 
 # TODO add file indexing into one CSV with all our latlong exports.

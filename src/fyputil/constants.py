@@ -7,6 +7,9 @@ export_dir = "img_export"
 geotiff_dir = "geotiff_export"
 data_dir = f"{drive_path}{export_dir}"
 png_dir = f"{data_dir}/png"
+demo_dir = f"{drive_path}/demo_export"
+model_dir = f"{drive_path}/models"
+model_name = "resnet152_MRGHG_Demo1"
 
 CO_band = 'CO_column_number_density'
 HCHO_band = 'tropospheric_HCHO_column_number_density'

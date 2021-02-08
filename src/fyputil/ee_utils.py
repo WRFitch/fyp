@@ -1,3 +1,7 @@
+#==============================================================================
+# GOOGLE EARTH ENGINE UTILITIES
+#==============================================================================
+
 import constants as c
 
 import csv
@@ -58,7 +62,7 @@ def getImgsFromCsv(csv_path, img):
   with open(csv_path) as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     firstRow = True
-
+  
     # The number of simultaneous exports can't go over 3 or 4 without taking a 
     # performance hit. 
     concurrent_exports = 3
@@ -80,7 +84,7 @@ def getImgsFromCsv(csv_path, img):
           os.path.isfile(f"{c.data_dir}/geotiff/{tifname}") or \
           os.path.isfile(f"{c.drive_path}{c.geotiff_dir}/{tifname}"):
         # TODO update to include variable log levels
-        #print(f"skipping  {name} - file already exists!")
+        print(f"skipping  {name} - file already exists!")
         continue
         
       export_buffer.append(tifname)
@@ -99,4 +103,3 @@ def getImgsFromCsv(csv_path, img):
             print(f"exported  {filename}")
   
   print(f"exported {csv_path}")
-
