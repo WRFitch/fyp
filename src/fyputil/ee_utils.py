@@ -1,4 +1,4 @@
-import fyp_constants as c
+import constants as c
 
 import csv
 import ee
@@ -23,7 +23,8 @@ def exportTableFromImage(image, polygon, scale, folder="no_export_folder",
   exportTable(sample(image, polygon, scale), scale, folder, desc)
   
 # samples image into feature_collection. 
-# TODO why is this called sample() ?
+# TODO rename to be a getDATATYPE, once we know the datatype returned from this.
+#      It's likely to be a FeatureCollection. 
 def sample(img, region, scale):
   return img.sampleRegions(
       collection = region,
@@ -32,16 +33,13 @@ def sample(img, region, scale):
   )
 
 # Export one GeoTIFF image of the given image, at the scale and dimension 
-# specified. maxPixels is just so it lets me export london at 10m/px. Dividing
-# the dataset into 1km squares is the next step. 
-# TODO reevaluate image export options - description needs coordinates
+# specified.
 def exportGeotiff(image, polygon, scale, folder="no_export_folder", desc="no_desc"):
   ee.batch.Export.image.toDrive(
     crs = 'EPSG:3857',
     description = desc,
     fileFormat = 'GeoTIFF',
     folder = folder,
-    # formatOptions = image_export_options,
     image = image,
     maxPixels = 10e9,
     region = polygon,
@@ -49,6 +47,7 @@ def exportGeotiff(image, polygon, scale, folder="no_export_folder", desc="no_des
   ).start()
 
 # Gets a square kilometer with the given point object as the centroid. 
+# TODO is this definitely a square kilometer? 
 def getSqKmFromPoint(point):
   return point.buffer(500).bounds()
 
