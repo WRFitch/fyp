@@ -1,4 +1,4 @@
-import fyp_constants as c
+import constants as c
 
 import csv
 import json
