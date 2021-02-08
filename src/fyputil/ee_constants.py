@@ -6,7 +6,9 @@
 # ee.Initialize() 
 #==============================================================================
 
+import constants as c
 import ee 
+import folium
 
 # Define collections for each dataset to be used 
 s2 = ee.ImageCollection("COPERNICUS/S2_SR")
@@ -25,11 +27,14 @@ fs5_O3 = ee.FeatureCollection("COPERNICUS/S5P/OFFL/L3_O3")
 fs5_SO2 = ee.FeatureCollection("COPERNICUS/S5P/OFFL/L3_SO2")
 fs5_CH4 = ee.FeatureCollection("COPERNICUS/S5P/OFFL/L3_CH4")
 
+
+# Could the start and end dates be shifted or focused on one area, so emissions can be monitored across the seasons? 
+# Would that even be useful? 
 start_date = '2020-01-01'
 end_date = '2020-12-31'
 vis_palette = ['black', 'blue', 'purple', 'cyan', 'green', 'yellow', 'red']
 
-# GOOGLE EARTH ENGINE POLYGON BOUNDARY OBJECTS
+# polygon boundary object library - separate import? 
 great_britain = ee.Geometry.Polygon(
         [[[-1.836112801004015, 59.808076330562756],
           [-8.779472176004015, 58.82140293049428],
@@ -58,7 +63,6 @@ uxbridge = ee.Geometry.Rectangle(
         [[-0.5585304622116949, 51.577993458567235],
          [-0.3951088313523199, 51.51009512268249]])
 
-# Used to check scaling is a-ok
 millennium_dome = ee.Geometry.Polygon(
         [[[0, 51.51],
           [0, 51.49],
@@ -83,3 +87,192 @@ east_hemisphere = ee.Geometry.Polygon(
           [173.5310605678897, -84.77052832075908],
           [173.5310605678897, 84.89714695160266]]])
 
+
+# Define ImageCollection for each GHG 
+
+# TODO analyse whether these min/max values are valid, recalibrate for highest 
+#      variance where necessary. Separate values may be necessary for different
+#      samples - for example, the perfect calibration for the UK won't work on 
+#      the rest of the world. 
+# TODO analyse whether it makes sense to analyse these on a highly localised level
+
+# pre-filter to remove clouds - we can add them back in as data points from 
+# sentinel 5 if necessary
+def maskS2clouds(image) :
+  qa = image.select('QA60')
+
+  # Bits 10 and 11 are clouds and cirrus, respectively.
+  cloud_bitmask = 1 << 10
+  cirrus_bitmask = 1 << 11
+
+  # Both flags should be set to zero, indicating clear conditions.
+  mask = qa.bitwiseAnd(cloud_bitmask).eq(0).And( \
+         qa.bitwiseAnd(cirrus_bitmask).eq(0))
+
+  return image.updateMask(mask).divide(10000)
+
+# High-resolution satellite photograph 
+s2_img = s2.filterDate(start_date, end_date) \
+           .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20)) \
+           .filterBounds(great_britain) \
+           .map(maskS2clouds).median()
+
+CO_img = s5_CO.filterDate(start_date, end_date) \
+              .filterBounds(great_britain) \
+              .select(c.CO_band).mean()
+
+HCHO_img = s5_HCHO.filterDate(start_date, end_date) \
+                  .filterBounds(great_britain) \
+                  .select(c.HCHO_band).mean()
+
+NO2_img = s5_NO2.filterDate(start_date, end_date) \
+                .filterBounds(great_britain) \
+                .select(c.NO2_band).mean()
+
+O3_img = s5_O3.filterDate(start_date, end_date) \
+              .filterBounds(great_britain) \
+              .select(c.O3_band).mean()
+
+SO2_img = s5_SO2.filterDate(start_date, end_date) \
+                .filterBounds(great_britain) \
+                .select(c.SO2_band).mean()
+
+CH4_img = s5_CH4.filterDate(start_date, end_date) \
+                .filterBounds(great_britain) \
+                .select(c.CH4_band).mean()
+
+ghg_imgs = [CO_img, HCHO_img, NO2_img, O3_img, SO2_img, CH4_img]
+
+
+# Define IDs for each GHG
+# Minmax scale is a bit off - recalibrate for my datasets 
+s2_id = s2_img.getMapId({'bands': ['B4', 'B3', 'B2'], \
+                        'min': 0, \
+                        'max': 0.3})
+
+CO_id = CO_img.getMapId( \
+    {'palette': vis_palette, \
+    'min': 0, \
+    'max': 0.05})
+
+HCHO_id = HCHO_img.getMapId( \
+    {'palette': vis_palette, \
+    'min': 0.0, \
+    'max': 0.0003})
+
+NO2_id = NO2_img.getMapId( \
+    {'palette': vis_palette, \
+    'min': 0.0, \
+    'max': 0.0002})
+
+O3_id = O3_img.getMapId( \
+    {'palette': vis_palette, \
+    'min': 0.12, \
+    'max': 0.15})
+
+SO2_id = SO2_img.getMapId( \
+    {'palette': vis_palette, \
+    'min': 0.0, \
+    'max': 0.0005})
+
+CH4_id = CH4_img.getMapId( \
+    {'palette': vis_palette, \
+    'min': 1750, \
+    'max': 1900})
+
+ghg_ids = [CO_id, HCHO_id, NO2_id, O3_id, SO2_id, CH4_id]
+
+
+# Define FeatureCollections for each GHG 
+CO_fc = fs5_CO.filterDate(start_date, end_date) \
+              .filterBounds(great_britain) \
+              .select(c.CO_band)
+
+HCHO_fc = fs5_HCHO.filterDate(start_date, end_date) \
+              .filterBounds(great_britain) \
+              .select(c.HCHO_band)
+
+NO2_fc = fs5_NO2.filterDate(start_date, end_date) \
+              .filterBounds(great_britain) \
+              .select(c.NO2_band)
+
+O3_fc = fs5_O3.filterDate(start_date, end_date) \
+              .filterBounds(great_britain) \
+              .select(c.O3_band)
+
+SO2_fc = fs5_SO2.filterDate(start_date, end_date) \
+              .filterBounds(great_britain) \
+              .select(c.SO2_band)
+  
+CH4_fc = fs5_CH4.filterDate(start_date, end_date) \
+              .filterBounds(great_britain) \
+              .select(c.CH4_band)
+
+ghg_fcs = [CO_fc, HCHO_fc, NO2_fc, O3_fc, SO2_fc, CH4_fc]
+
+# Visualise data on a Folium map 
+# Attribution has to stay earthengine.google.com, since that's where these maps came from. 
+map_attr = 'Map Data &copy; <a href="https://earthengine.google.com/">Google Earth Engine</a>'
+layerOpacity = 0.5
+
+map = folium.Map(
+    location = [51.5, 0.1], 
+    prefer_canvas = True)
+
+
+folium.TileLayer(
+    tiles = s2_id['tile_fetcher'].url_format,
+    attr = map_attr,
+    overlay = True,
+    name = 'satellite photography median composite '
+  ).add_to(map)
+
+folium.TileLayer(
+    tiles = CO_id['tile_fetcher'].url_format,
+    attr = map_attr,
+    overlay = True,
+    name = 'Carbon Monoxide',
+    opacity = layerOpacity
+  ).add_to(map)
+
+folium.TileLayer(
+    tiles = HCHO_id['tile_fetcher'].url_format,
+    attr = map_attr,
+    overlay = True,
+    name = 'Formaldehyde',
+    opacity = layerOpacity
+  ).add_to(map)
+
+folium.TileLayer(
+    tiles = NO2_id['tile_fetcher'].url_format,
+    attr = map_attr,
+    overlay = True,
+    name = 'Nitrogen Dioxide',
+    opacity = layerOpacity
+  ).add_to(map)
+
+folium.TileLayer(
+    tiles = O3_id['tile_fetcher'].url_format,
+    attr = map_attr,
+    overlay = True,
+    name = 'Ozone',
+    opacity = layerOpacity
+  ).add_to(map)
+
+folium.TileLayer(
+    tiles = SO2_id['tile_fetcher'].url_format,
+    attr = map_attr,
+    overlay = True,
+    name = 'Sulphur Dioxide',
+    opacity = layerOpacity
+  ).add_to(map)
+
+folium.TileLayer(
+    tiles = CH4_id['tile_fetcher'].url_format,
+    attr = map_attr,
+    overlay = True,
+    name = 'Methane',
+    opacity = layerOpacity
+  ).add_to(map)
+  
+map.add_child(folium.LayerControl())

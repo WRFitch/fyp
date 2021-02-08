@@ -34,7 +34,8 @@ def sample(img, region, scale):
 
 # Export one GeoTIFF image of the given image, at the scale and dimension 
 # specified.
-def exportGeotiff(image, polygon, scale, folder="no_export_folder", desc="no_desc"):
+def exportGeotiff(image, polygon, scale, folder="no_export_folder", 
+    desc="no_desc"):
   ee.batch.Export.image.toDrive(
     crs = 'EPSG:3857',
     description = desc,

@@ -11,7 +11,7 @@ import os
 from PIL import Image
 from pprint import pprint 
 
-from fyputil import fyp_constants as fc 
+from fyputil import constants as fc 
 from fyputil import ee_constants as ec
 
 ee.Authenticate()

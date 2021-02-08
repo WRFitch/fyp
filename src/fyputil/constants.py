@@ -16,5 +16,14 @@ SO2_band = 'SO2_column_number_density'
 CH4_band = 'CH4_column_volume_mixing_ratio_dry_air'
 ghg_bands = [CO_band, HCHO_band, NO2_band, O3_band, SO2_band, CH4_band]
 
+fomula_names = {
+  CO_band: "Carbon Dioxide",
+  HCHO_band: "Formaldehyde",
+  NO2_band: "Nitrogen Dioxide",
+  O3_band: "Ozone",
+  SO2_band: "Silicon Dioxide",
+  CH4_band: "Methane"
+}
+
 lon = "longitude"
 lat = "latitude"

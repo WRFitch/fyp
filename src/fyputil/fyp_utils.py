@@ -131,21 +131,36 @@ def moveFilesByExtension(src, dest, extension):
         dest_path = full_path.replace(src, dest)
         os.rename(full_path, dest_path)
 
-# TODO currently unused, since the rest of the code checks for duplicates before 
-# initiating an export. 
-def deDupe(path):
-  print("removing duplicates")
-  parent_path = os.path.join(c.drive_path, path)
-  print(parent_path)
+# Extracts lat and long volumes from .geo param in csv. 
+def parseCsvCoords(csv_path):
+  print(csv_path)
+  test_suffix = "_parsing_coordinates.csv"
+  
+  with open(csv_path, 'r') as read_obj, \
+      open(csv_path + test_suffix, 'w', newline='') as write_obj:
+    csv_reader = csv.reader(read_obj, delimiter=",")
+    csv_writer = csv.writer(write_obj, delimiter=",")
 
-  for root, _, files in os.walk(parent_path, topdown=True):
-    for name in files:
-      # TODO update to check if the filename fits the intended format for 
-      # coordinate images. 
-      try:
-        float(name.split("_")[-1][:-4])
-      except Exception:
-        print(f"removing {name}")
-        #os.remove(os.path.join(root, name))
+    firstRow = True
+    for row in csv_reader:
+      if firstRow: 
+        # break early if this method has already been applied to the given csv. 
+        if "longitude" in row: 
+          print(f"{csv_path} has already been processed - exiting...")
+          return 
+        row.append("longitude")
+        row.append("latitude")
+        firstRow = False
+      else:
+        # Could string parsing be made more efficient? 
+        # This method only needs to run once per csv so optimisation isn't that important. 
+        coords = json.loads(row[2]).get("coordinates")
+        row.append(coords[0])
+        row.append(coords[1])
+
+      csv_writer.writerow(row)
+  
+  os.remove(csv_path)
+  os.rename(csv_path + test_suffix, csv_path)
 
 # TODO add file indexing into one CSV with all our latlong exports.
