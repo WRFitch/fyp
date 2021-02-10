@@ -7,3 +7,7 @@
 - [What Software Engineers can do about Climate Change](https://codewithoutrules.com/2019/09/10/software-developers-climage-change/)
 - [Modelling Air Pollution, Climate, and Health Data Using Bayesian Networks: A Case Study of the English Regions](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1002/2017EA000326)
 - [Allan's handy dandy R package.](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1002/2017EA000326)
+- [Sources and Effects of Carbon Monoxide](https://www.nap.edu/read/10378/chapter/3)
+- [energyeducation.ca - carbon monoxide, good for other stuff too](https://energyeducation.ca/encyclopedia/Carbon_monoxide)
+- [TURI Formaldehyde](https://www.turi.org/TURI_Publications/TURI_Chemical_Fact_Sheets/Formaldehyde_Fact_Sheet/Formaldehyde_Facts/Health_and_Environment)
+- []()

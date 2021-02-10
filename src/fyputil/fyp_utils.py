@@ -138,4 +138,22 @@ def moveFilesByExtension(src, dest, extension):
         dest_path = full_path.replace(src, dest)
         os.rename(full_path, dest_path)
 
+def normGhgs(ghgs):
+  ghgs[0] *= 10000
+  ghgs[1] /= 1000
+  ghgs[2] *= 100
+  ghgs[3] *= 100000
+  ghgs[4] *= 100000
+  ghgs[5] *= 10
+  return ghgs 
+
+def deNormGhgs(ghgs):
+  ghgs[0] /= 10000
+  ghgs[1] *= 1000
+  ghgs[2] /= 100
+  ghgs[3] /= 100000
+  ghgs[4] /= 100000
+  ghgs[5] /= 10
+  return ghgs 
+
 # TODO add file indexing into one CSV with all our latlong exports.
