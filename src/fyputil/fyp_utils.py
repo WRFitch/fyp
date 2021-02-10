@@ -8,6 +8,7 @@ import constants as c
 import csv
 import json
 import os
+import pandas as pd
 
 # Currently no easy one-line import for host pc - considering this is only 
 # running on jupyter, I don't think this matters. 
@@ -146,6 +147,15 @@ def normGhgs(ghgs):
   ghgs[4] *= 100000
   ghgs[5] *= 10
   return ghgs 
+
+def normGhgDf(ghg_df):
+  ghg_df[c.SO2_band] = ghg_df[c.SO2_band].apply(lambda x: x*10000)
+  ghg_df[c.CH4_band] = ghg_df[c.CH4_band].apply(lambda x: x/1000)
+  ghg_df[c.CO_band] = ghg_df[c.CO_band].apply(lambda x: x*100)
+  ghg_df[c.HCHO_band] = ghg_df[c.HCHO_band].apply(lambda x: x*100000)
+  ghg_df[c.NO2_band] = ghg_df[c.NO2_band].apply(lambda x: x*100000)
+  ghg_df[c.O3_band] = ghg_df[c.O3_band].apply(lambda x: x*10)
+  return ghg_df
 
 def deNormGhgs(ghgs):
   ghgs[0] /= 10000
