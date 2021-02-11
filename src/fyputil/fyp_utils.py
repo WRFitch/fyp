@@ -157,6 +157,13 @@ def normGhgDf(ghg_df):
   ghg_df[c.CH4_band] = ghg_df[c.CH4_band].apply(lambda x: (x-1840)/2)
   return ghg_df
 
+def normGhgDfProperly(ghg_df):
+  for band in c.ghg_bands:
+    max = ghg_df[band].max()
+    min = ghg_df[band].min()
+    ghg_df[band] = ghg_df[band].apply(lambda x: (x-min)/(max-min) * 100)
+  return ghg_df
+
 def deNormGhgs(ghgs):
   ghgs[0] /= 10000
   ghgs[1] *= 1000
