@@ -149,12 +149,12 @@ def normGhgs(ghgs):
   return ghgs 
 
 def normGhgDf(ghg_df):
-  ghg_df[c.SO2_band] = ghg_df[c.SO2_band].apply(lambda x: x*10000)
-  ghg_df[c.CH4_band] = ghg_df[c.CH4_band].apply(lambda x: x/1000)
-  ghg_df[c.CO_band] = ghg_df[c.CO_band].apply(lambda x: x*100)
+  ghg_df[c.CO_band] = ghg_df[c.CO_band].apply(lambda x: (x-0.032) * 10000)
   ghg_df[c.HCHO_band] = ghg_df[c.HCHO_band].apply(lambda x: x*100000)
   ghg_df[c.NO2_band] = ghg_df[c.NO2_band].apply(lambda x: x*100000)
-  ghg_df[c.O3_band] = ghg_df[c.O3_band].apply(lambda x: x*10)
+  ghg_df[c.O3_band] = ghg_df[c.O3_band].apply(lambda x: (x-0.143) * 10000)
+  ghg_df[c.SO2_band] = ghg_df[c.SO2_band].apply(lambda x: x*10000)
+  ghg_df[c.CH4_band] = ghg_df[c.CH4_band].apply(lambda x: (x-1840)/2)
   return ghg_df
 
 def deNormGhgs(ghgs):
@@ -165,5 +165,14 @@ def deNormGhgs(ghgs):
   ghgs[4] /= 100000
   ghgs[5] /= 10
   return ghgs 
+
+def getGhgs(img_path, df): 
+  coords = getCoords(str(img_path))
+  ghgs = getValAt(coords, df)
+  concentrations = ghgs[c.ghg_bands]
+  if len(concentrations) == 0 : return None 
+  if None in concentrations: return None
+  # There has to be a cleaner way to do this. Iterating through and then only getting the first line? really? 
+  return [tuple(x) for x in concentrations.to_numpy()][0]
 
 # TODO add file indexing into one CSV with all our latlong exports.
