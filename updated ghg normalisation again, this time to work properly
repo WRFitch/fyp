@@ -1,0 +1,1631 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "fyp_model_testing.ipynb",
+      "provenance": [],
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/WRFitch/fyp/blob/main/updated%20ghg%20normalisation%20again%2C%20this%20time%20to%20work%20properly\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "MlL01n7dexnl"
+      },
+      "source": [
+        "# Testing\n",
+        "A notebook for testing an exported model. Ideally, this can be considered a part of a model evaluation pipeline, in which a model can be evaluated in greater depth. "
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "tQzTgaA5fWu8"
+      },
+      "source": [
+        "## Setup"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "1UDpJr3i-WS2"
+      },
+      "source": [
+        "### Notebook Setup "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "iX9MY-tjfCvL"
+      },
+      "source": [
+        "!pip uninstall -y fastai\n",
+        "!pip install -U --no-cache-dir fastai"
+      ],
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "BdaFWRYPe4Oc",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "2947a11a-0213-435d-b49a-20970987cbfb"
+      },
+      "source": [
+        "from fastai.vision.all import *\n",
+        "from google.colab import drive\n",
+        "#from scipy import stats\n",
+        "from sklearn.metrics import mean_squared_error\n",
+        "\n",
+        "import numpy as np \n",
+        "import os \n",
+        "import pandas as pd\n",
+        "\n",
+        "drive.mount('/content/drive')"
+      ],
+      "execution_count": 1,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Mounted at /content/drive\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "aW2I5siTPGba"
+      },
+      "source": [
+        "%rm -rf /content/fyp/"
+      ],
+      "execution_count": 2,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "XEZzGW0Xeuty",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "730511d9-a646-4bc9-91bc-13b00d3ec6fd"
+      },
+      "source": [
+        "# Import fyputil library\n",
+        "%cd /content\n",
+        "!git clone https://github.com/WRFitch/fyp.git\n",
+        "%cd fyp/src/fyputil\n",
+        "import constants as c\n",
+        "import fyp_utils as fyputil\n",
+        "%cd /content"
+      ],
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "/content\n",
+            "Cloning into 'fyp'...\n",
+            "remote: Enumerating objects: 331, done.\u001b[K\n",
+            "remote: Counting objects: 100% (331/331), done.\u001b[K\n",
+            "remote: Compressing objects: 100% (272/272), done.\u001b[K\n",
+            "remote: Total 843 (delta 216), reused 109 (delta 59), pack-reused 512\u001b[K\n",
+            "Receiving objects: 100% (843/843), 144.30 MiB | 28.35 MiB/s, done.\n",
+            "Resolving deltas: 100% (471/471), done.\n",
+            "/content/fyp/src/fyputil\n",
+            "/content\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "WKJFItks-ZXL"
+      },
+      "source": [
+        "### Data Setup "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "RXRkZ9qEfGpb"
+      },
+      "source": [
+        "# Add a dummy label script to fool fastai into letting us import the model. \n",
+        "# We're not going to train the model further, so this is fine. \n",
+        "def getGhgsAsArr(img_path):\n",
+        "  return np.array()\n",
+        "\n",
+        "model = load_learner(f\"{c.model_dir}/Resnet152_MRGHG_test3.pkl\")\n",
+        "\n",
+        "def normGhgDfProperly(ghg_df):\n",
+        "  for band in c.ghg_bands:\n",
+        "    max = ghg_df[band].max()\n",
+        "    min = ghg_df[band].min()\n",
+        "    ghg_df[band] = ghg_df[band].apply(lambda x: (x-min)/(max-min) * 100)\n",
+        "  return ghg_df"
+      ],
+      "execution_count": 43,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 461
+        },
+        "id": "E3_RyVgmj4LI",
+        "outputId": "6cca80b1-8d3f-4b86-87f5-3b92c0ba3f75"
+      },
+      "source": [
+        "ghg_df = pd.read_csv(c.ghg_csv)\n",
+        "ghg_df = normGhgDf(ghg_df)\n",
+        "ghg_df"
+      ],
+      "execution_count": 44,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>Unnamed: 0</th>\n",
+              "      <th>system:index</th>\n",
+              "      <th>SO2_column_number_density</th>\n",
+              "      <th>longitude</th>\n",
+              "      <th>latitude</th>\n",
+              "      <th>CH4_column_volume_mixing_ratio_dry_air</th>\n",
+              "      <th>CO_column_number_density</th>\n",
+              "      <th>tropospheric_HCHO_column_number_density</th>\n",
+              "      <th>tropospheric_NO2_column_number_density</th>\n",
+              "      <th>O3_column_number_density</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>134</td>\n",
+              "      <td>0_134</td>\n",
+              "      <td>8.018471</td>\n",
+              "      <td>-0.795009</td>\n",
+              "      <td>51.118631</td>\n",
+              "      <td>3.293359</td>\n",
+              "      <td>7.330961</td>\n",
+              "      <td>8.680908</td>\n",
+              "      <td>9.059254</td>\n",
+              "      <td>5.862382</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>135</td>\n",
+              "      <td>0_135</td>\n",
+              "      <td>7.459609</td>\n",
+              "      <td>-0.786026</td>\n",
+              "      <td>51.118631</td>\n",
+              "      <td>3.149588</td>\n",
+              "      <td>7.000534</td>\n",
+              "      <td>8.893860</td>\n",
+              "      <td>9.093928</td>\n",
+              "      <td>5.798349</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>136</td>\n",
+              "      <td>0_136</td>\n",
+              "      <td>8.220924</td>\n",
+              "      <td>-0.777043</td>\n",
+              "      <td>51.118631</td>\n",
+              "      <td>2.931395</td>\n",
+              "      <td>7.231526</td>\n",
+              "      <td>8.647043</td>\n",
+              "      <td>8.998110</td>\n",
+              "      <td>5.487693</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>137</td>\n",
+              "      <td>0_137</td>\n",
+              "      <td>9.313378</td>\n",
+              "      <td>-0.768060</td>\n",
+              "      <td>51.118631</td>\n",
+              "      <td>1.970592</td>\n",
+              "      <td>7.131359</td>\n",
+              "      <td>8.475451</td>\n",
+              "      <td>8.959904</td>\n",
+              "      <td>5.174860</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>138</td>\n",
+              "      <td>0_138</td>\n",
+              "      <td>9.529495</td>\n",
+              "      <td>-0.759076</td>\n",
+              "      <td>51.118631</td>\n",
+              "      <td>2.547749</td>\n",
+              "      <td>6.893881</td>\n",
+              "      <td>8.913896</td>\n",
+              "      <td>8.966956</td>\n",
+              "      <td>5.098768</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>...</th>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1881</th>\n",
+              "      <td>4147</td>\n",
+              "      <td>0_4147</td>\n",
+              "      <td>6.939874</td>\n",
+              "      <td>0.345851</td>\n",
+              "      <td>51.379143</td>\n",
+              "      <td>6.714247</td>\n",
+              "      <td>9.540681</td>\n",
+              "      <td>11.794592</td>\n",
+              "      <td>11.951923</td>\n",
+              "      <td>10.403010</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1882</th>\n",
+              "      <td>4148</td>\n",
+              "      <td>0_4148</td>\n",
+              "      <td>6.984720</td>\n",
+              "      <td>0.354835</td>\n",
+              "      <td>51.379143</td>\n",
+              "      <td>9.206190</td>\n",
+              "      <td>10.010053</td>\n",
+              "      <td>11.164448</td>\n",
+              "      <td>11.884144</td>\n",
+              "      <td>10.446786</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1883</th>\n",
+              "      <td>4149</td>\n",
+              "      <td>0_4149</td>\n",
+              "      <td>7.369845</td>\n",
+              "      <td>0.363818</td>\n",
+              "      <td>51.379143</td>\n",
+              "      <td>7.094298</td>\n",
+              "      <td>11.400949</td>\n",
+              "      <td>12.147918</td>\n",
+              "      <td>11.977970</td>\n",
+              "      <td>10.475704</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1884</th>\n",
+              "      <td>4150</td>\n",
+              "      <td>0_4150</td>\n",
+              "      <td>8.027657</td>\n",
+              "      <td>0.372801</td>\n",
+              "      <td>51.379143</td>\n",
+              "      <td>7.094296</td>\n",
+              "      <td>10.934001</td>\n",
+              "      <td>12.449807</td>\n",
+              "      <td>11.845887</td>\n",
+              "      <td>10.375585</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1885</th>\n",
+              "      <td>4151</td>\n",
+              "      <td>0_4151</td>\n",
+              "      <td>8.193220</td>\n",
+              "      <td>0.381784</td>\n",
+              "      <td>51.379143</td>\n",
+              "      <td>5.764840</td>\n",
+              "      <td>11.293237</td>\n",
+              "      <td>12.596464</td>\n",
+              "      <td>11.765375</td>\n",
+              "      <td>10.370764</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "<p>1886 rows × 10 columns</p>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "      Unnamed: 0  ... O3_column_number_density\n",
+              "0            134  ...                 5.862382\n",
+              "1            135  ...                 5.798349\n",
+              "2            136  ...                 5.487693\n",
+              "3            137  ...                 5.174860\n",
+              "4            138  ...                 5.098768\n",
+              "...          ...  ...                      ...\n",
+              "1881        4147  ...                10.403010\n",
+              "1882        4148  ...                10.446786\n",
+              "1883        4149  ...                10.475704\n",
+              "1884        4150  ...                10.375585\n",
+              "1885        4151  ...                10.370764\n",
+              "\n",
+              "[1886 rows x 10 columns]"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 44
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "QL1qYQplBqaI",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 69
+        },
+        "outputId": "73d8a599-42b5-42dc-ac62-22f6c0c5dd8a"
+      },
+      "source": [
+        "err_headers = [c.lon, c.lat] + c.ghg_bands\n",
+        "errors = pd.DataFrame(columns = err_headers)\n",
+        "errors.iloc[0:1]"
+      ],
+      "execution_count": 45,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>longitude</th>\n",
+              "      <th>latitude</th>\n",
+              "      <th>CO_column_number_density</th>\n",
+              "      <th>tropospheric_HCHO_column_number_density</th>\n",
+              "      <th>tropospheric_NO2_column_number_density</th>\n",
+              "      <th>O3_column_number_density</th>\n",
+              "      <th>SO2_column_number_density</th>\n",
+              "      <th>CH4_column_volume_mixing_ratio_dry_air</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "Empty DataFrame\n",
+              "Columns: [longitude, latitude, CO_column_number_density, tropospheric_HCHO_column_number_density, tropospheric_NO2_column_number_density, O3_column_number_density, SO2_column_number_density, CH4_column_volume_mixing_ratio_dry_air]\n",
+              "Index: []"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 45
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "xua-CHprfZK4"
+      },
+      "source": [
+        "## Testing"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "kbeoskWgfcJD"
+      },
+      "source": [
+        "### Test model against existing data "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "z_H7QU3HLdMG",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "f6176003-777a-4859-8f63-19de8f91d8d8"
+      },
+      "source": [
+        "print(c.ghg_bands)\n",
+        "\n",
+        "# TODO replace with fyputil, OR re-implement to keep any failed measurements and\n",
+        "# evaluate what you can out of them. Just because they're incomplete, that \n",
+        "# doesn't make them worthless \n",
+        "def getGhgs(img_path, df): \n",
+        "  coords = fyputil.getCoords(str(img_path))\n",
+        "  ghgs = fyputil.getValAt(coords, df)\n",
+        "  concentrations = ghgs[c.ghg_bands]\n",
+        "  if len(concentrations) == 0 : return None \n",
+        "  if None in concentrations: return None\n",
+        "  # There has to be a cleaner way to do this. Iterating through and then only getting the first line? really? \n",
+        "  return [tuple(x) for x in concentrations.to_numpy()][0]"
+      ],
+      "execution_count": 6,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "['CO_column_number_density', 'tropospheric_HCHO_column_number_density', 'tropospheric_NO2_column_number_density', 'O3_column_number_density', 'SO2_column_number_density', 'CH4_column_volume_mixing_ratio_dry_air']\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "yDDu-x0VfYu7",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 1000
+        },
+        "outputId": "22585596-3ef9-47d9-c0b9-ff21b890c10f"
+      },
+      "source": [
+        "mod = 0 \n",
+        "\n",
+        "for filename in os.listdir(c.png_dir):\n",
+        "  file_ghgs = getGhgs(filename, ghg_df)\n",
+        "  if file_ghgs == None: continue\n",
+        "  if mod % 100 == 0:\n",
+        "    print(f\"predicting ghg gases at {filename}\")\n",
+        "    coords = fyputil.getCoords(filename) \n",
+        "    prediction = model.predict(f\"{c.png_dir}/{filename}\")[0]\n",
+        "\n",
+        "    diffs = [pred - act for pred, act in zip(prediction, file_ghgs)]\n",
+        "    errors.loc[len(errors)] = list(coords) + diffs\n",
+        "\n",
+        "    print(tuple(coords))\n",
+        "    print(prediction)\n",
+        "    print(file_ghgs)\n",
+        "    print(diffs)\n",
+        "    print()\n",
+        "  mod += 1 \n",
+        "\n"
+      ],
+      "execution_count": 39,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "predicting ghg gases at -0.7860258736045813_51.34321006385125.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(-0.7860258736045813, 51.34321006385125)\n",
+            "(8.870816230773926, 6.077643394470215, 5.654150009155273, 8.926637649536133, 2.9402976036071777, 5.750401496887207)\n",
+            "(5.700281438838633, 6.1002314112803235, 6.016104068351802, 8.22480297615863, 3.8827485607775603, 3.091472696924484)\n",
+            "[3.1705347919352924, -0.02258801681010869, -0.36195405919652845, 0.7018346733775029, -0.9424509571703825, 2.658928799962723]\n",
+            "\n",
+            "predicting ghg gases at 0.3458513843860158_51.34321006385125.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(0.3458513843860158, 51.34321006385125)\n",
+            "(9.33753490447998, 5.900914192199707, 5.461743354797363, 9.18249225616455, 2.850790023803711, 6.444260597229004)\n",
+            "(9.626941725286025, 6.1976230923727575, 5.828184649833629, 10.137142338690342, 2.0346703869559186, 7.042464733128327)\n",
+            "[-0.28940682080604496, -0.2967089001730505, -0.36644129503626566, -0.9546500825257915, 0.8161196368477923, -0.5982041358993229]\n",
+            "\n",
+            "predicting ghg gases at 0.3368682315448206_51.361176369533645.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(0.3368682315448206, 51.361176369533645)\n",
+            "(10.215782165527344, 5.993492126464844, 5.362922668457031, 9.442716598510742, 2.8844659328460693, 7.476370811462402)\n",
+            "(9.956234468662256, 6.461085877567219, 5.901694406410933, 10.45639089524708, 2.1401855409447608, 8.553059731512462)\n",
+            "[0.25954769686508783, -0.4675937511023749, -0.5387717379539021, -1.0136742967363386, 0.7442803919013086, -1.07668892005006]\n",
+            "\n",
+            "predicting ghg gases at 0.2829693144976493_51.37015952237484.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(0.2829693144976493, 51.37015952237484)\n",
+            "(9.796238899230957, 5.99736213684082, 5.434342384338379, 9.348455429077148, 2.832581043243408, 6.75956916809082)\n",
+            "(10.391668281118996, 5.767963388508207, 6.267165371473741, 10.520651740823228, 3.403908462697123, 7.49299322767672)\n",
+            "[-0.5954293818880387, 0.22939874833261342, -0.8328229871353621, -1.1721963117460792, -0.571327419453715, -0.7334240595859001]\n",
+            "\n",
+            "predicting ghg gases at 0.20212093892689234_51.37914267521604.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(0.20212093892689234, 51.37914267521604)\n",
+            "(12.022821426391602, 5.985413551330566, 5.638124465942383, 10.308690071105957, 2.7384564876556396, 9.079304695129395)\n",
+            "(13.231953110715775, 5.472442028500891, 6.578555754674347, 10.672212784214041, 2.730297654753723, 8.06920623121323)\n",
+            "[-1.2091316843241735, 0.5129715228296758, -0.9404312887319639, -0.36352271310808426, 0.008158832901916657, 1.0100984639161652]\n",
+            "\n",
+            "predicting ghg gases at 0.1661883275621115_51.18151331270974.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(0.1661883275621115, 51.18151331270974)\n",
+            "(11.050334930419922, 5.947244644165039, 5.355863571166992, 9.721514701843262, 2.8123021125793457, 8.183146476745605)\n",
+            "(11.379930188147522, 7.075242554693576, 5.255308728490337, 9.302583383118957, 4.597428241356164, 6.312187606295311)\n",
+            "[-0.32959525772760045, -1.1279979105285367, 0.10055484267665538, 0.41893131872430445, -1.7851261287768185, 1.8709588704502949]\n",
+            "\n",
+            "predicting ghg gases at 0.10330625767374498_51.190496465550936.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(0.10330625767374498, 51.190496465550936)\n",
+            "(9.285229682922363, 5.912372589111328, 5.200700759887695, 9.043766021728516, 2.8822293281555176, 6.614407539367676)\n",
+            "(10.227290422003058, 6.079860165063859, 5.305540846590793, 9.278129470713104, 2.2699609541613817, 6.959507218695194)\n",
+            "[-0.942060739080695, -0.1674875759525305, -0.10484008670309741, -0.23436344898458827, 0.6122683739941359, -0.34509967932751806]\n",
+            "\n",
+            "predicting ghg gases at 0.15720517472091627_51.11863124282137.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(0.15720517472091627, 51.11863124282137)\n",
+            "(10.906627655029297, 5.958054542541504, 5.586997985839844, 9.518832206726074, 2.822542190551758, 7.59043025970459)\n",
+            "(9.900489023510136, 5.118353502220666, 4.79641639047329, 8.924711341390113, 3.8594007380760975, 4.174333542878458)\n",
+            "[1.0061386315191605, 0.839701040320838, 0.7905815953665538, 0.5941208653359613, -1.0368585475243397, 3.4160967168261323]\n",
+            "\n",
+            "predicting ghg gases at 0.14822202187972106_51.16354700702735.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(0.14822202187972106, 51.16354700702735)\n",
+            "(9.60071849822998, 6.114716529846191, 5.442873001098633, 9.076712608337402, 2.953051805496216, 6.371201515197754)\n",
+            "(9.374345383415806, 7.1090640464873385, 5.216828711067987, 9.414983596137127, 3.216587827040189, 4.575450086067349)\n",
+            "[0.22637311481417477, -0.9943475166411471, 0.22604429003064563, -0.3382709877997243, -0.26353602154397304, 1.795751429130405]\n",
+            "\n",
+            "predicting ghg gases at 0.35483453722721103_51.20846277123333.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(0.35483453722721103, 51.20846277123333)\n",
+            "(11.40161418914795, 5.88233757019043, 5.729256629943848, 9.831793785095215, 2.8046207427978516, 8.47379207611084)\n",
+            "(13.075658462942396, 6.121630037661282, 5.228017339823881, 9.993153341582573, 2.753645542649176, 10.803995224347204)\n",
+            "[-1.674044273794447, -0.2392924674708521, 0.5012392901199663, -0.16135955648735845, 0.050975200148675626, -2.3302031482363645]\n",
+            "\n",
+            "predicting ghg gases at 0.2919524673388445_51.226429076915714.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(0.2919524673388445, 51.226429076915714)\n",
+            "(11.368093490600586, 6.205284118652344, 5.888343811035156, 9.905309677124023, 2.785289764404297, 8.055082321166992)\n",
+            "(13.283626625063203, 5.748818590273779, 5.147581213645673, 9.900050693475437, 3.6848768157814935, 10.20236209364532)\n",
+            "[-1.915533134462617, 0.4564655283785646, 0.7407625973894829, 0.005258983648586124, -0.8995870513771966, -2.1472797724783277]\n",
+            "\n",
+            "predicting ghg gases at 0.229070397450478_51.23541222975691.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(0.229070397450478, 51.23541222975691)\n",
+            "(10.517997741699219, 6.113494873046875, 5.421496391296387, 9.129597663879395, 3.0438692569732666, 7.067649841308594)\n",
+            "(11.086204820857995, 6.634902777062545, 5.248190538651104, 9.434269664732597, 4.143315876270762, 7.326542982640376)\n",
+            "[-0.5682070791587766, -0.5214079040156703, 0.17330585264528242, -0.304672000853202, -1.0994466192974954, -0.2588931413317823]\n",
+            "\n",
+            "predicting ghg gases at 0.15720517472091627_51.2533785354393.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(0.15720517472091627, 51.2533785354393)\n",
+            "(8.368928909301758, 6.215165138244629, 5.503447532653809, 8.724211692810059, 3.017038345336914, 5.239428520202637)\n",
+            "(10.67937172615635, 7.691812480574711, 5.285615723101502, 8.928915861153575, 2.575094113174213, 5.372410165744327)\n",
+            "[-2.310442816854593, -1.4766473423300823, 0.2178318095523064, -0.20470416834351646, 0.44194423216270096, -0.13298164554169034]\n",
+            "\n",
+            "predicting ghg gases at -0.26500300881525884_51.29829429964528.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(-0.26500300881525884, 51.29829429964528)\n",
+            "(8.243026733398438, 5.737972259521484, 5.050941467285156, 8.753150939941406, 2.8899435997009277, 5.779346466064453)\n",
+            "(8.816976370830398, 5.150612706662084, 5.771363956664699, 10.026832925517926, 2.0119034711725514, 5.457337742286427)\n",
+            "[-0.5739496374319604, 0.5873595528594002, -0.7204224893795423, -1.2736819855765198, 0.8780401285283763, 0.32200872377802625]\n",
+            "\n",
+            "predicting ghg gases at -0.3278850787036254_51.307277452486474.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(-0.3278850787036254, 51.307277452486474)\n",
+            "(9.772082328796387, 6.024713516235352, 5.878935813903809, 9.286805152893066, 2.812169075012207, 6.623804092407227)\n",
+            "(8.90143681294954, 5.314312582843895, 5.859934272292446, 9.85033769633964, 3.167633323547813, 5.703700845297249)\n",
+            "[0.8706455158468476, 0.7104009333914565, 0.01900154161136225, -0.5635325434465734, -0.3554642485356059, 0.9201032471099779]\n",
+            "\n",
+            "predicting ghg gases at -0.3728008429096014_51.31626060532767.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(-0.3728008429096014, 51.31626060532767)\n",
+            "(11.822260856628418, 6.615521430969238, 5.114855766296387, 11.378499984741211, 1.9562036991119385, 7.953874588012695)\n",
+            "(10.078300130191703, 6.6084520392200226, 5.985903138440752, 10.317925013244578, 2.6896202617952873, 6.228845048422272)\n",
+            "[1.7439607264367147, 0.0070693917492157254, -0.871047372144365, 1.0605749714966333, -0.7334165626833489, 1.7250295395904232]\n",
+            "\n",
+            "predicting ghg gases at -0.4626323713215536_51.32524375816886.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(-0.4626323713215536, 51.32524375816886)\n",
+            "(16.0, 16.0, 16.0, 16.0, 16.0, 16.0)\n",
+            "(9.378943867555597, 6.396413562055545, 6.158726493421717, 10.160233428704036, 3.521135454660214, 6.999510843386361)\n",
+            "[6.621056132444403, 9.603586437944454, 9.841273506578283, 5.839766571295964, 12.478864545339786, 9.00048915661364]\n",
+            "\n",
+            "predicting ghg gases at -0.4087334542743823_51.19947961839213.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(-0.4087334542743823, 51.19947961839213)\n",
+            "(7.392139434814453, 6.011549949645996, 5.1624908447265625, 8.552082061767578, 2.9411158561706543, 5.067248344421387)\n",
+            "(4.351060694279749, 5.6530776365658495, 4.864550317647034, 8.727724031936113, 2.171961139029797, 5.7997290537097115)\n",
+            "[3.0410787405347044, 0.3584723130801466, 0.2979405270795281, -0.17564197016853456, 0.7691547171408573, -0.7324807092883248]\n",
+            "\n",
+            "predicting ghg gases at 0.20212093892689234_51.32524375816886.png\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              ""
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "(0.20212093892689234, 51.32524375816886)\n",
+            "(9.321166038513184, 6.052667617797852, 5.292806625366211, 9.087063789367676, 2.9138946533203125, 6.237984657287598)\n",
+            "(9.738256132679341, 6.027676987823028, 5.572109976812338, 10.189548373458479, 4.085204740752072, 6.167747028206691)\n",
+            "[-0.4170900941661575, 0.024990629974823264, -0.27930335144612695, -1.1024845840908029, -1.1713100874317597, 0.07023762908090703]\n",
+            "\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "FH5j7du6U1ya",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 665
+        },
+        "outputId": "622b62b3-979d-4870-c090-0ab7c6c22bd8"
+      },
+      "source": [
+        "errors "
+      ],
+      "execution_count": 40,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>longitude</th>\n",
+              "      <th>latitude</th>\n",
+              "      <th>CO_column_number_density</th>\n",
+              "      <th>tropospheric_HCHO_column_number_density</th>\n",
+              "      <th>tropospheric_NO2_column_number_density</th>\n",
+              "      <th>O3_column_number_density</th>\n",
+              "      <th>SO2_column_number_density</th>\n",
+              "      <th>CH4_column_volume_mixing_ratio_dry_air</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>-0.786026</td>\n",
+              "      <td>51.343210</td>\n",
+              "      <td>3.170535</td>\n",
+              "      <td>-0.022588</td>\n",
+              "      <td>-0.361954</td>\n",
+              "      <td>0.701835</td>\n",
+              "      <td>-0.942451</td>\n",
+              "      <td>2.658929</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>0.345851</td>\n",
+              "      <td>51.343210</td>\n",
+              "      <td>-0.289407</td>\n",
+              "      <td>-0.296709</td>\n",
+              "      <td>-0.366441</td>\n",
+              "      <td>-0.954650</td>\n",
+              "      <td>0.816120</td>\n",
+              "      <td>-0.598204</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>0.336868</td>\n",
+              "      <td>51.361176</td>\n",
+              "      <td>0.259548</td>\n",
+              "      <td>-0.467594</td>\n",
+              "      <td>-0.538772</td>\n",
+              "      <td>-1.013674</td>\n",
+              "      <td>0.744280</td>\n",
+              "      <td>-1.076689</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>0.282969</td>\n",
+              "      <td>51.370160</td>\n",
+              "      <td>-0.595429</td>\n",
+              "      <td>0.229399</td>\n",
+              "      <td>-0.832823</td>\n",
+              "      <td>-1.172196</td>\n",
+              "      <td>-0.571327</td>\n",
+              "      <td>-0.733424</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>0.202121</td>\n",
+              "      <td>51.379143</td>\n",
+              "      <td>-1.209132</td>\n",
+              "      <td>0.512972</td>\n",
+              "      <td>-0.940431</td>\n",
+              "      <td>-0.363523</td>\n",
+              "      <td>0.008159</td>\n",
+              "      <td>1.010098</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>5</th>\n",
+              "      <td>0.166188</td>\n",
+              "      <td>51.181513</td>\n",
+              "      <td>-0.329595</td>\n",
+              "      <td>-1.127998</td>\n",
+              "      <td>0.100555</td>\n",
+              "      <td>0.418931</td>\n",
+              "      <td>-1.785126</td>\n",
+              "      <td>1.870959</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>6</th>\n",
+              "      <td>0.103306</td>\n",
+              "      <td>51.190496</td>\n",
+              "      <td>-0.942061</td>\n",
+              "      <td>-0.167488</td>\n",
+              "      <td>-0.104840</td>\n",
+              "      <td>-0.234363</td>\n",
+              "      <td>0.612268</td>\n",
+              "      <td>-0.345100</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>7</th>\n",
+              "      <td>0.157205</td>\n",
+              "      <td>51.118631</td>\n",
+              "      <td>1.006139</td>\n",
+              "      <td>0.839701</td>\n",
+              "      <td>0.790582</td>\n",
+              "      <td>0.594121</td>\n",
+              "      <td>-1.036859</td>\n",
+              "      <td>3.416097</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>8</th>\n",
+              "      <td>0.148222</td>\n",
+              "      <td>51.163547</td>\n",
+              "      <td>0.226373</td>\n",
+              "      <td>-0.994348</td>\n",
+              "      <td>0.226044</td>\n",
+              "      <td>-0.338271</td>\n",
+              "      <td>-0.263536</td>\n",
+              "      <td>1.795751</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>9</th>\n",
+              "      <td>0.354835</td>\n",
+              "      <td>51.208463</td>\n",
+              "      <td>-1.674044</td>\n",
+              "      <td>-0.239292</td>\n",
+              "      <td>0.501239</td>\n",
+              "      <td>-0.161360</td>\n",
+              "      <td>0.050975</td>\n",
+              "      <td>-2.330203</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>10</th>\n",
+              "      <td>0.291952</td>\n",
+              "      <td>51.226429</td>\n",
+              "      <td>-1.915533</td>\n",
+              "      <td>0.456466</td>\n",
+              "      <td>0.740763</td>\n",
+              "      <td>0.005259</td>\n",
+              "      <td>-0.899587</td>\n",
+              "      <td>-2.147280</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>11</th>\n",
+              "      <td>0.229070</td>\n",
+              "      <td>51.235412</td>\n",
+              "      <td>-0.568207</td>\n",
+              "      <td>-0.521408</td>\n",
+              "      <td>0.173306</td>\n",
+              "      <td>-0.304672</td>\n",
+              "      <td>-1.099447</td>\n",
+              "      <td>-0.258893</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>12</th>\n",
+              "      <td>0.157205</td>\n",
+              "      <td>51.253379</td>\n",
+              "      <td>-2.310443</td>\n",
+              "      <td>-1.476647</td>\n",
+              "      <td>0.217832</td>\n",
+              "      <td>-0.204704</td>\n",
+              "      <td>0.441944</td>\n",
+              "      <td>-0.132982</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>13</th>\n",
+              "      <td>-0.265003</td>\n",
+              "      <td>51.298294</td>\n",
+              "      <td>-0.573950</td>\n",
+              "      <td>0.587360</td>\n",
+              "      <td>-0.720422</td>\n",
+              "      <td>-1.273682</td>\n",
+              "      <td>0.878040</td>\n",
+              "      <td>0.322009</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>14</th>\n",
+              "      <td>-0.327885</td>\n",
+              "      <td>51.307277</td>\n",
+              "      <td>0.870646</td>\n",
+              "      <td>0.710401</td>\n",
+              "      <td>0.019002</td>\n",
+              "      <td>-0.563533</td>\n",
+              "      <td>-0.355464</td>\n",
+              "      <td>0.920103</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>15</th>\n",
+              "      <td>-0.372801</td>\n",
+              "      <td>51.316261</td>\n",
+              "      <td>1.743961</td>\n",
+              "      <td>0.007069</td>\n",
+              "      <td>-0.871047</td>\n",
+              "      <td>1.060575</td>\n",
+              "      <td>-0.733417</td>\n",
+              "      <td>1.725030</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>16</th>\n",
+              "      <td>-0.462632</td>\n",
+              "      <td>51.325244</td>\n",
+              "      <td>6.621056</td>\n",
+              "      <td>9.603586</td>\n",
+              "      <td>9.841274</td>\n",
+              "      <td>5.839767</td>\n",
+              "      <td>12.478865</td>\n",
+              "      <td>9.000489</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>17</th>\n",
+              "      <td>-0.408733</td>\n",
+              "      <td>51.199480</td>\n",
+              "      <td>3.041079</td>\n",
+              "      <td>0.358472</td>\n",
+              "      <td>0.297941</td>\n",
+              "      <td>-0.175642</td>\n",
+              "      <td>0.769155</td>\n",
+              "      <td>-0.732481</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>18</th>\n",
+              "      <td>0.202121</td>\n",
+              "      <td>51.325244</td>\n",
+              "      <td>-0.417090</td>\n",
+              "      <td>0.024991</td>\n",
+              "      <td>-0.279303</td>\n",
+              "      <td>-1.102485</td>\n",
+              "      <td>-1.171310</td>\n",
+              "      <td>0.070238</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "    longitude  ...  CH4_column_volume_mixing_ratio_dry_air\n",
+              "0   -0.786026  ...                                2.658929\n",
+              "1    0.345851  ...                               -0.598204\n",
+              "2    0.336868  ...                               -1.076689\n",
+              "3    0.282969  ...                               -0.733424\n",
+              "4    0.202121  ...                                1.010098\n",
+              "5    0.166188  ...                                1.870959\n",
+              "6    0.103306  ...                               -0.345100\n",
+              "7    0.157205  ...                                3.416097\n",
+              "8    0.148222  ...                                1.795751\n",
+              "9    0.354835  ...                               -2.330203\n",
+              "10   0.291952  ...                               -2.147280\n",
+              "11   0.229070  ...                               -0.258893\n",
+              "12   0.157205  ...                               -0.132982\n",
+              "13  -0.265003  ...                                0.322009\n",
+              "14  -0.327885  ...                                0.920103\n",
+              "15  -0.372801  ...                                1.725030\n",
+              "16  -0.462632  ...                                9.000489\n",
+              "17  -0.408733  ...                               -0.732481\n",
+              "18   0.202121  ...                                0.070238\n",
+              "\n",
+              "[19 rows x 8 columns]"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 40
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "ZXREDvXdRjRX"
+      },
+      "source": [
+        "errors.to_csv(f\"{c.data_dir}/errors3.csv\")"
+      ],
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "aCykJTyevfYZ"
+      },
+      "source": [
+        "### Basic stat testing \n",
+        "- Data exploration \n",
+        "- RMSE per GHG\n",
+        "- Extract outliers & view images "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "66_W65n-veuU"
+      },
+      "source": [
+        "errors = pd.read_csv(f\"{c.data_dir}/errors3.csv\")"
+      ],
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "1SzWvBN-0u8I"
+      },
+      "source": [
+        "model_stats = pd.DataFrame(columns = [\"stat\"] + c.ghg_bands)"
+      ],
+      "execution_count": 41,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "Ychfb1HGCE_0"
+      },
+      "source": [
+        "def getRmse(series): \n",
+        "  return np.sqrt(np.mean(series**2))"
+      ],
+      "execution_count": 21,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "flkVCRb-wghu"
+      },
+      "source": [
+        "# Define aggregate metrics \n",
+        "means = [errors[ghg].mean() for ghg in c.ghg_bands ]\n",
+        "stdevs = [errors[ghg].std() for ghg in c.ghg_bands ]\n",
+        "rmse = [getRmse(errors[ghg]) for ghg in c.ghg_bands ]\n",
+        "min = [ghg_df[ghg].min() for ghg in c.ghg_bands]\n",
+        "max = [ghg_df[ghg].max() for ghg in c.ghg_bands]\n",
+        "range = [maxval - minval for maxval, minval in zip(max, min)]\n",
+        "rmse_as_pct = [(errval / rngval) * 100 for errval, rngval in zip(rmse, range)]\n",
+        "\n",
+        "model_stats.loc[1] = [\"Mean\"] + means\n",
+        "model_stats.loc[2] = [\"Standard Deviation\"] + stdevs \n",
+        "model_stats.loc[3] = [\"Min\"] + min\n",
+        "model_stats.loc[4] = [\"Max\"] + max\n",
+        "model_stats.loc[5] = [\"Range\"] + range\n",
+        "model_stats.loc[6] = [\"RMSE\"] + rmse\n",
+        "model_stats.loc[7] = [\"RMSE as percentage\"] + rmse_as_pct"
+      ],
+      "execution_count": 42,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "sUT_KzHcJPsA",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 324
+        },
+        "outputId": "a922074d-cda2-4c12-c784-00e5198d8d8e"
+      },
+      "source": [
+        "model_stats"
+      ],
+      "execution_count": 35,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>stat</th>\n",
+              "      <th>CO_column_number_density</th>\n",
+              "      <th>tropospheric_HCHO_column_number_density</th>\n",
+              "      <th>tropospheric_NO2_column_number_density</th>\n",
+              "      <th>O3_column_number_density</th>\n",
+              "      <th>SO2_column_number_density</th>\n",
+              "      <th>CH4_column_volume_mixing_ratio_dry_air</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>Mean</td>\n",
+              "      <td>0.321813</td>\n",
+              "      <td>0.421913</td>\n",
+              "      <td>0.415395</td>\n",
+              "      <td>0.039881</td>\n",
+              "      <td>0.417962</td>\n",
+              "      <td>0.759708</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>Standard Deviation</td>\n",
+              "      <td>2.129606</td>\n",
+              "      <td>2.311333</td>\n",
+              "      <td>2.341952</td>\n",
+              "      <td>1.548833</td>\n",
+              "      <td>3.029103</td>\n",
+              "      <td>2.508817</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>Min</td>\n",
+              "      <td>3.300390</td>\n",
+              "      <td>4.034831</td>\n",
+              "      <td>4.384961</td>\n",
+              "      <td>4.828771</td>\n",
+              "      <td>1.023293</td>\n",
+              "      <td>0.990163</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>Max</td>\n",
+              "      <td>15.376154</td>\n",
+              "      <td>8.663142</td>\n",
+              "      <td>7.415872</td>\n",
+              "      <td>11.545652</td>\n",
+              "      <td>5.474309</td>\n",
+              "      <td>12.736687</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>5</th>\n",
+              "      <td>Range</td>\n",
+              "      <td>12.075764</td>\n",
+              "      <td>4.628312</td>\n",
+              "      <td>3.030911</td>\n",
+              "      <td>6.716881</td>\n",
+              "      <td>4.451017</td>\n",
+              "      <td>11.746524</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>6</th>\n",
+              "      <td>RMSE</td>\n",
+              "      <td>2.097639</td>\n",
+              "      <td>2.288908</td>\n",
+              "      <td>2.317028</td>\n",
+              "      <td>1.508051</td>\n",
+              "      <td>2.977791</td>\n",
+              "      <td>2.557351</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>7</th>\n",
+              "      <td>RMSE as percentage</td>\n",
+              "      <td>17.370649</td>\n",
+              "      <td>49.454492</td>\n",
+              "      <td>76.446608</td>\n",
+              "      <td>22.451654</td>\n",
+              "      <td>66.901371</td>\n",
+              "      <td>21.771133</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "                 stat  ...  CH4_column_volume_mixing_ratio_dry_air\n",
+              "1                Mean  ...                                0.759708\n",
+              "2  Standard Deviation  ...                                2.508817\n",
+              "3                 Min  ...                                0.990163\n",
+              "4                 Max  ...                               12.736687\n",
+              "5               Range  ...                               11.746524\n",
+              "6                RMSE  ...                                2.557351\n",
+              "7  RMSE as percentage  ...                               21.771133\n",
+              "\n",
+              "[7 rows x 7 columns]"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 35
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "tLqBOX23GdTG"
+      },
+      "source": [
+        "# Finding error rate as a percentage based on RMSE "
+      ],
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "SIG3A3uMGDLJ"
+      },
+      "source": [
+        "# Find outliers "
+      ],
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "9wOg6CkVfnnb"
+      },
+      "source": [
+        "### Sample images vs predictions \n",
+        "what regions are easier to predict than others? \n",
+        "\n",
+        "create accuracy heatmap "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "udr8LN2Pfzg9"
+      },
+      "source": [
+        ""
+      ],
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "DfxyWGU-fwLW"
+      },
+      "source": [
+        "### Activation Mapping"
+      ]
+    }
+  ]
+}
