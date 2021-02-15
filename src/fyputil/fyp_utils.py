@@ -164,6 +164,16 @@ def normGhgDfProperly(ghg_df):
     ghg_df[band] = ghg_df[band].apply(lambda x: (x-min)/(max-min) * 100)
   return ghg_df
 
+def deNormGhgPrediction(prediction, ghg_df):
+  denormed = []
+  idx = 0
+  for band in c.ghg_bands:
+    max = ghg_df[band].max()
+    min = ghg_df[band].min()
+    denormed.append(((prediction[idx]/100) * (max-min)) + min)
+    idx += 1 
+  return denormed
+
 def deNormGhgs(ghgs):
   ghgs[0] /= 10000
   ghgs[1] *= 1000
