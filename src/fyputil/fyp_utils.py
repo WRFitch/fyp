@@ -8,6 +8,8 @@ import constants as c
 import csv
 import json
 import os
+
+import numpy as np 
 import pandas as pd
 
 # Currently no easy one-line import for host pc - considering this is only 
@@ -139,24 +141,6 @@ def moveFilesByExtension(src, dest, extension):
         dest_path = full_path.replace(src, dest)
         os.rename(full_path, dest_path)
 
-def normGhgs(ghgs):
-  ghgs[0] *= 10000
-  ghgs[1] /= 1000
-  ghgs[2] *= 100
-  ghgs[3] *= 100000
-  ghgs[4] *= 100000
-  ghgs[5] *= 10
-  return ghgs 
-
-def normGhgDf(ghg_df):
-  ghg_df[c.CO_band] = ghg_df[c.CO_band].apply(lambda x: (x-0.032) * 10000)
-  ghg_df[c.HCHO_band] = ghg_df[c.HCHO_band].apply(lambda x: x*100000)
-  ghg_df[c.NO2_band] = ghg_df[c.NO2_band].apply(lambda x: x*100000)
-  ghg_df[c.O3_band] = ghg_df[c.O3_band].apply(lambda x: (x-0.143) * 10000)
-  ghg_df[c.SO2_band] = ghg_df[c.SO2_band].apply(lambda x: x*10000)
-  ghg_df[c.CH4_band] = ghg_df[c.CH4_band].apply(lambda x: (x-1840)/2)
-  return ghg_df
-
 def normGhgDfProperly(ghg_df):
   for band in c.ghg_bands:
     max = ghg_df[band].max()
@@ -174,15 +158,6 @@ def deNormGhgPrediction(prediction, ghg_df):
     idx += 1 
   return denormed
 
-def deNormGhgs(ghgs):
-  ghgs[0] /= 10000
-  ghgs[1] *= 1000
-  ghgs[2] /= 100
-  ghgs[3] /= 100000
-  ghgs[4] /= 100000
-  ghgs[5] /= 10
-  return ghgs 
-
 def getGhgs(img_path, df): 
   coords = getCoords(str(img_path))
   ghgs = getValAt(coords, df)
@@ -192,4 +167,7 @@ def getGhgs(img_path, df):
   # There has to be a cleaner way to do this. Iterating through and then only getting the first line? really? 
   return [tuple(x) for x in concentrations.to_numpy()][0]
 
+def getGhgsAsArr(img_path, df):
+  return np.array(getGhgs(img_path, df))
+  
 # TODO add file indexing into one CSV with all our latlong exports.
