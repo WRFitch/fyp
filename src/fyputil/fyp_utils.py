@@ -141,6 +141,7 @@ def moveFilesByExtension(src, dest, extension):
         dest_path = full_path.replace(src, dest)
         os.rename(full_path, dest_path)
 
+# TODO refactor the whole GHG dataframe chain. It's a mess. 
 def normGhgDfProperly(ghg_df):
   for band in c.ghg_bands:
     max = ghg_df[band].max()
@@ -171,3 +172,11 @@ def getGhgsAsArr(img_path, df):
   return np.array(getGhgs(img_path, df))
   
 # TODO add file indexing into one CSV with all our latlong exports.
+
+# Checks the image is in the dataframe and can therefore be used
+def imgIsInDf(img_path, df):
+  # Probably a faster way to do this
+  val = getGhgs(img_path, df)
+  if val == None: return False 
+  if len(val) == 6: return True 
+  return False
