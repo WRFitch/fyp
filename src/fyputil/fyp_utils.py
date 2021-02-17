@@ -170,7 +170,7 @@ def getGhgs(img_path, df):
 
 def getGhgsAsArr(img_path, df):
   return np.array(getGhgs(img_path, df))
-  
+
 # TODO add file indexing into one CSV with all our latlong exports.
 
 # Checks the image is in the dataframe and can therefore be used
