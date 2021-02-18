@@ -3,6 +3,7 @@
 #==============================================================================
 
 drive_path = "/content/drive/MyDrive/"
+local_drive = "/home/will/drive"
 export_dir = "img_export"
 geotiff_dir = "geotiff_export"
 data_dir = f"{drive_path}{export_dir}"

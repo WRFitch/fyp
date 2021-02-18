@@ -1,23 +1,23 @@
-#! /usr/bin/python3
+#!/usr/bin/python3
 
 """
 Python script to import data based on ghg coordinates, without using Google
 Colab, allowing us to preserve usage limits for AI training. 
-
-TODO this requires drive mounting the same way it works on colab
 """
 
 import ee
 import os
+import pandas as pd 
 
-#from google.colab import drive
 #from osgeo import gdal
 
-import fyputil.constants as c
-import fyputil.ee_constants as eec
-import fyputil.ee_utils as eeutil
-import fyputil.fyp_utils as fyputi
+import ee_constants as eec
+import ee_utils as eeutil
 
 ee.Authenticate()
 ee.Initialize()
 
+csv_path = "/src/fyp/datasets/ghgs/ghgs.csv"
+ghg_data = pd.read_csv(csv_path)
+
+eeutil.getBigImgsFromDf(ghg_data, eec.s2_img)

@@ -6,8 +6,9 @@ import constants as c
 
 import csv
 import ee
-import os
 import json
+import os
+import pandas as pd
 import time
 
 #TODO remove json import and just parse the string normally
@@ -54,7 +55,10 @@ def exportGeotiff(image, polygon, scale, folder="no_export_folder",
 # Gets a square kilometer with the given point object as the centroid. 
 # TODO is this definitely a square kilometer? 
 def getSqKmFromPoint(point):
-  return point.buffer(500).bounds()
+  return getRangeFromPoint(point, 500)
+
+def getRangeFromPoint(point, range):
+  return point.buffer(range).bounds()
 
 # Read in CSV from drive
 # This method is bad, and I should feel bad 
@@ -103,3 +107,27 @@ def getImgsFromCsv(csv_path, img):
             print(f"exported  {filename}")
   
   print(f"exported {csv_path}")
+
+def getBigImgsFromDf(df, img):
+  # limit concurrent exports to avoid performance hit
+  concurrent_exports = 3
+  export_buffer = []
+
+  for _, row in df.iterrows():
+    coords = (row.longitude, row.latitude)
+    polygon = getRangeFromPoint(ee.Geometry.Point(coords), 700)
+    name = f"{coords[0]}_{coords[1]}"
+    tifname = name + ".tif"
+    
+    export_buffer.append(tifname)
+    print(f"exporting {tifname}")
+    exportGeotiff(img, polygon, 10, f"{c.data_dir}/big_geotiff", name)
+
+    while len(export_buffer) >= concurrent_exports:
+      time.sleep(10)
+      # when the files stored in the export buffer are found in the drive,
+      # remove them 
+      for filename in export_buffer:
+        if os.path.isfile(f"{c.local_drive}{c.geotiff_dir}/{filename}"): 
+          export_buffer.remove(filename)
+          print(f"exported  {filename}")
