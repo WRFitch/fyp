@@ -121,13 +121,13 @@ def getBigImgsFromDf(df, img):
     
     export_buffer.append(tifname)
     print(f"exporting {tifname}")
-    exportGeotiff(img, polygon, 10, f"{c.data_dir}/big_geotiff", name)
+    exportGeotiff(img, polygon, 10, "big_geotiff", name)
 
     while len(export_buffer) >= concurrent_exports:
       time.sleep(10)
       # when the files stored in the export buffer are found in the drive,
       # remove them 
       for filename in export_buffer:
-        if os.path.isfile(f"{c.local_drive}{c.geotiff_dir}/{filename}"): 
+        if os.path.isfile(f"{c.local_drive}/big_geotiff/{filename}"): 
           export_buffer.remove(filename)
           print(f"exported  {filename}")

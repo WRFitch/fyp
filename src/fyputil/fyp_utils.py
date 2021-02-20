@@ -91,7 +91,7 @@ def rmConversionArtifacts(path, rmTif = False, rmXml = False):
       fullpath = os.path.join(root, name)
       rmArtifact(fullpath, rmTif, rmXml)
 
-def geotiffToPng(tif_path, rm_artifacts = False):
+def geotiffToPng(tif_path, png_path = c.png_dir, rm_artifacts = False):
   # Define rgb bands and file extension
   options_list = [
     '-ot Byte',
@@ -116,7 +116,7 @@ def geotiffToPng(tif_path, rm_artifacts = False):
       path = split_path[0]
       filename = path.split("/")[-1]
       if os.path.isfile(path + ".png") or \
-          os.path.isfile(f"{c.png_dir}/{filename}.png"):
+          os.path.isfile(f"{png_path}/{filename}.png"):
         print(f"A png file already exists for {full_path}")
         continue
       
