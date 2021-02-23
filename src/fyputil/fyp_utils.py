@@ -12,8 +12,7 @@ import os
 import numpy as np 
 import pandas as pd
 
-# Currently no easy one-line import for host pc - considering this is only 
-# running on jupyter, I don't think this matters. 
+# TODO Currently no easy one-line import for host pc 
 from osgeo import gdal
 
 # get filename from filepath, remove file extension and split into longitude and
