@@ -1,6 +1,7 @@
 #==============================================================================
 # FYP UTILITIES
-# TODO rename to filename utilities
+#
+# TODO refactor to include a saner data pipeline 
 #==============================================================================
 
 import constants as c
@@ -15,26 +16,8 @@ import pandas as pd
 # TODO Currently no easy one-line import for host pc 
 from osgeo import gdal
 
-# get filename from filepath, remove file extension and split into longitude and
-# latitude. 
-def getCoords(img_path):
-  #print(img_path)
-  return list(map(float, img_path.split("/")[-1][0:-4].split("_")))
-
-def getFilepath(coords):
-  return f"{c.png_dir}/{coords[0]}_{coords[1]}.png"
-
-def imgExported(coords):
-  return os.path.isfile(getFilepath(coords))
-
-# Get the row from the given dataframe at the given coordinates.
-# We have to define rounded precision because floats suck. There should be a 
-# better way of doing this...
-def getValAt(coords, df, prec=10):
-  return df.loc[(round(df["longitude"], prec) == round(coords[0], prec)) & \
-                (round(df["latitude" ], prec) == round(coords[1], prec))]
-
 # Extracts lat and long volumes from .geo param in csv. 
+# TODO refactor to use pandas df joins, rather than iteration 
 def parseCsvCoords(csv_path):
   print(csv_path)
   test_suffix = "_parsing_coordinates.csv"
@@ -55,9 +38,6 @@ def parseCsvCoords(csv_path):
         row.append("latitude")
         firstRow = False
       else:
-        # Could string parsing be made more efficient? 
-        # This method only needs to run once per csv so optimisation isn't that 
-        # important. 
         coords = json.loads(row[2]).get("coordinates")
         row.append(coords[0])
         row.append(coords[1])
@@ -69,10 +49,10 @@ def parseCsvCoords(csv_path):
 
 # removes old geoTIFF images or xml conversion artifacts from the given directory. 
 def rmArtifact(artifact_path, rmTif = False, rmXml = False):
+  if not (rmTif or rmXml): return
   if not os.path.isfile(artifact_path): 
     print(f"{artifact_path} does not exist")
     return
-  if not (rmTif or rmXml): return
   
   extension = os.path.splitext(artifact_path)[1].lower()
   if (extension == ".tif" and rmTif) or \
@@ -85,22 +65,23 @@ def rmConversionArtifacts(path, rmTif = False, rmXml = False):
   if not (rmTif or rmXml): return
 
   parent_path = os.path.join(c.drive_path, path)
-  for root, dirs, files in os.walk(parent_path, topdown=True):
+  for root, _, files in os.walk(parent_path, topdown=True):
     for name in files:
       fullpath = os.path.join(root, name)
       rmArtifact(fullpath, rmTif, rmXml)
 
 def geotiffToPng(tif_path, png_path = c.png_dir, rm_artifacts = False):
   # Define rgb bands and file extension
-  options_list = [
-    '-ot Byte',
-    '-of PNG',
-    '-b 4',
-    '-b 3',
-    '-b 2',
-    '-scale'
-  ]
-  options_string = " ".join(options_list)
+  #options_list = [
+  #  '-ot Byte',
+  #  '-of PNG',
+  #  '-b 4',
+  #  '-b 3',
+  #  '-b 2',
+  #  '-scale'
+  #]
+  #options_string = " ".join(options_list)
+  options_string = '-ot Byte -of PNG -b 4 -b 3 -b 2 -scale'
   parent_path = os.path.join(c.drive_path, tif_path)
 
   # Recursively walk through all files (this has to be simpler)
@@ -141,7 +122,30 @@ def moveFilesByExtension(src, dest, extension):
         os.rename(full_path, dest_path)
 
 # TODO refactor the whole GHG dataframe chain. It's a mess. 
+
+# Get image coordinates from filename
+def getCoords(img_path):
+  return list(map(float, img_path.split("/")[-1][0:-4].split("_")))
+
+# Get filepath of a given image 
+def getFilepath(coords):
+  return f"{c.png_dir}/{coords[0]}_{coords[1]}.png"
+
+def imgExported(coords):
+  return os.path.isfile(getFilepath(coords))
+
+# Get the row from the given dataframe at the given coordinates.
+# We have to define rounded precision because floats suck. There should be a 
+# better way of doing this...
+def getValAt(coords, df, prec=10):
+  return df.loc[(round(df["longitude"], prec) == round(coords[0], prec)) & \
+                (round(df["latitude" ], prec) == round(coords[1], prec))]
+
+# TODO included for legacy, remove asap 
 def normGhgDfProperly(ghg_df):
+  return normGhgDf(ghg_df)
+
+def normGhgDf(ghg_df):
   for band in c.ghg_bands:
     max = ghg_df[band].max()
     min = ghg_df[band].min()
@@ -170,12 +174,7 @@ def getGhgs(img_path, df):
 def getGhgsAsArr(img_path, df):
   return np.array(getGhgs(img_path, df))
 
-# TODO add file indexing into one CSV with all our latlong exports.
-
 # Checks the image is in the dataframe and can therefore be used
 def imgIsInDf(img_path, df):
-  # Probably a faster way to do this
-  val = getGhgs(img_path, df)
-  if val == None: return False 
-  if len(val) == 6: return True 
-  return False
+  coords = getCoords(str(img_path))
+  return getValAt(coords, df).empty
