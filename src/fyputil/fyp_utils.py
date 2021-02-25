@@ -152,7 +152,11 @@ def normGhgDf(ghg_df):
     ghg_df[band] = ghg_df[band].apply(lambda x: (x-min)/(max-min) * 100)
   return ghg_df
 
+# TODO included for legacy, remove asap 
 def deNormGhgPrediction(prediction, ghg_df):
+  return deNormPrediction(prediction, ghg_df)
+
+def deNormPrediction(prediction, ghg_df):
   denormed = []
   idx = 0
   for band in c.ghg_bands:
