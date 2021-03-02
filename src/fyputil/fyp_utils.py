@@ -2,6 +2,7 @@
 # FYP UTILITIES
 #
 # TODO refactor to include a saner data pipeline 
+# TODO refactor to be only data utils - this is currently too general. 
 #==============================================================================
 
 import constants as c
@@ -181,7 +182,7 @@ def getGhgsAsArr(img_path, df):
 # Checks the image is in the dataframe and can therefore be used
 def imgIsInDf(img_path, df):
   coords = getCoords(str(img_path))
-  return getValAt(coords, df).empty
+  return not getValAt(coords, df).empty
 
 def rmBracketedDupe(dir):
   # Look for any duplicated files and remove 
