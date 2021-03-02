@@ -138,8 +138,8 @@ def imgExported(coords):
 # We have to define rounded precision because floats suck. There should be a 
 # better way of doing this...
 def getValAt(coords, df, prec=10):
-  return df.loc[(round(df["longitude"], prec) == round(coords[0], prec)) & \
-                (round(df["latitude" ], prec) == round(coords[1], prec))]
+  return df.loc[(round(df[c.lon], prec) == round(coords[0], prec)) & \
+                (round(df[c.lat], prec) == round(coords[1], prec))]
 
 # TODO included for legacy, remove asap 
 def normGhgDfProperly(ghg_df):
@@ -182,3 +182,24 @@ def getGhgsAsArr(img_path, df):
 def imgIsInDf(img_path, df):
   coords = getCoords(str(img_path))
   return getValAt(coords, df).empty
+
+def rmBracketedDupe(dir):
+  # Look for any duplicated files and remove 
+  count = 0
+  for root, dir, files in os.walk(dir):
+    for file in files:
+      if "(" in file:
+        print(f"{root}/{file}")
+        os.remove(f"{root}/{file}")
+        count += 1
+  print(count)
+
+def rmDupe(dir):
+  count = 0
+  for root, dir, files in os.walk(dir):
+    for file in files:
+      if "(" in file:
+        print(f"{root}/{file}")
+        os.remove(f"{root}/{file}")
+        count += 1
+  print(count)
