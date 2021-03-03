@@ -115,6 +115,7 @@ def getBigImgsFromDf(df, img):
 
   for _, row in df.iterrows():
     coords = (row.longitude, row.latitude)
+    # Arbitrarily defining the pixels, this gives us 224px
     polygon = getRangeFromPoint(ee.Geometry.Point(coords), 700)
     name = f"{coords[0]}_{coords[1]}"
     tifname = name + ".tif"
