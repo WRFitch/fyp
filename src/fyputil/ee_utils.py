@@ -124,6 +124,10 @@ def getBigImgsFromDf(df, img):
     print(f"exporting {tifname}")
     exportGeotiff(img, polygon, 10, "big_geotiff", name)
 
+    if imgExportExists("_224", name): 
+      print(f"{name} exists!")
+      continue
+
     while len(export_buffer) >= concurrent_exports:
       time.sleep(10)
       # when the files stored in the export buffer are found in the drive,
@@ -132,3 +136,15 @@ def getBigImgsFromDf(df, img):
         if os.path.isfile(f"{c.local_drive}/big_geotiff/{filename}"): 
           export_buffer.remove(filename)
           print(f"exported  {filename}")
+
+def imgExportExists(size_suffix, img_name):
+  # Checks a PNG export exists in the given img_dir, or a geotiff exists in the
+  # backup or default space. Size_suffix is given as _224, usually. 
+  testpaths = [
+    f"{c.png_dir}{size_suffix}/{img_name}.png",
+    f"{c.data_dir}/geotiff{size_suffix}/{img_name}.tif",
+    f"{c.drive_path}big_geotiff/{img_name}.tif"
+  ] 
+  for path in testpaths:
+    if os.path.isfile(path): return True
+  return False 

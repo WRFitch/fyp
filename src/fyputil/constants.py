@@ -2,8 +2,15 @@
 # FYP Constants 
 #==============================================================================
 
+import os
+
 drive_path = "/content/drive/MyDrive/"
-local_drive = "/home/will/drive"
+local_drive = "/home/will/drive/"
+# Hacky way of having automatic userspace changes. It's not scalable, but it's
+# ok for hacking around. 
+if os.environ.get('USERNAME') == 'will':
+  drive_path = local_drive
+
 export_dir = "img_export"
 geotiff_dir = "geotiff_export"
 data_dir = f"{drive_path}{export_dir}"
