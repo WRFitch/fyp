@@ -119,14 +119,14 @@ def getBigImgsFromDf(df, img):
     polygon = getRangeFromPoint(ee.Geometry.Point(coords), 700)
     name = f"{coords[0]}_{coords[1]}"
     tifname = name + ".tif"
-    
-    export_buffer.append(tifname)
-    print(f"exporting {tifname}")
-    exportGeotiff(img, polygon, 10, "big_geotiff", name)
 
     if imgExportExists("_224", name): 
       print(f"{name} exists!")
       continue
+    
+    export_buffer.append(tifname)
+    print(f"exporting {tifname}")
+    exportGeotiff(img, polygon, 10, "big_geotiff", name)
 
     while len(export_buffer) >= concurrent_exports:
       time.sleep(10)
