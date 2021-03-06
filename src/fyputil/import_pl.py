@@ -9,8 +9,6 @@ import ee
 import os
 import pandas as pd 
 
-#from osgeo import gdal
-
 ee.Authenticate()
 ee.Initialize()
 
