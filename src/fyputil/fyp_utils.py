@@ -112,7 +112,6 @@ def geotiffToPng(tif_path, png_path = c.png_dir, rm_artifacts = False):
 # Move files from src to dest if they have the correct extension
 def moveFilesByExtension(src, dest, extension):
   parent_path = os.path.join(c.drive_path, src)
-  print(parent_path)
 
   for root, _, files in os.walk(parent_path, topdown=True):
     for name in files:
@@ -120,6 +119,7 @@ def moveFilesByExtension(src, dest, extension):
       split_path = os.path.splitext(full_path)
       if split_path[1].lower() == extension:
         dest_path = full_path.replace(src, dest)
+        print(f"moving files from {full_path} to {dest_path}")
         os.rename(full_path, dest_path)
 
 # TODO refactor the whole GHG dataframe chain. It's a mess. 
