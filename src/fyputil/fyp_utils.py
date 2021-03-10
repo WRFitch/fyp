@@ -48,6 +48,7 @@ def parseCsvCoords(csv_path):
   os.remove(csv_path)
   os.rename(csv_path + test_suffix, csv_path)
 
+# TODO move to file_utils.py
 # removes old geoTIFF images or xml conversion artifacts from the given directory. 
 def rmArtifact(artifact_path, rmTif = False, rmXml = False):
   if not (rmTif or rmXml): return
@@ -61,6 +62,7 @@ def rmArtifact(artifact_path, rmTif = False, rmXml = False):
     print(f"removing {artifact_path}")
     os.remove(artifact_path)
 
+# TODO move to file_utils.py
 def rmConversionArtifacts(path, rmTif = False, rmXml = False):
   # No point checking all these files if we're not going to do anything 
   if not (rmTif or rmXml): return
@@ -109,6 +111,7 @@ def geotiffToPng(tif_path, png_path = c.png_dir, rm_artifacts = False):
       print(f"Converted {filename} from GeoTIFF to PNG")
       if rm_artifacts: rmArtifact(full_path, True, True)
 
+# TODO move to file_utils.py
 # Move files from src to dest if they have the correct extension
 def moveFilesByExtension(src, dest, extension):
   parent_path = os.path.join(c.drive_path, src)
@@ -143,8 +146,8 @@ def getValAt(coords, df, prec=10):
                 (round(df[c.lat], prec) == round(coords[1], prec))]
 
 # TODO included for legacy, remove asap 
-def normGhgDfProperly(ghg_df):
-  return normGhgDf(ghg_df)
+#def normGhgDfProperly(ghg_df):
+#  return normGhgDf(ghg_df)
 
 def normGhgDf(ghg_df):
   for band in c.ghg_bands:
@@ -184,18 +187,8 @@ def imgIsInDf(img_path, df):
   coords = getCoords(str(img_path))
   return not getValAt(coords, df).empty
 
-def rmBracketedDupe(dir):
-  # Look for any duplicated files and remove 
-  count = 0
-  for root, dir, files in os.walk(dir):
-    for file in files:
-      if "(" in file:
-        print(f"{root}/{file}")
-        os.remove(f"{root}/{file}")
-        count += 1
-  print(count)
-
-def rmDupe(dir):
+# TODO move to file_utils.py
+def rmBracketedDupe(dir): 
   count = 0
   for root, dir, files in os.walk(dir):
     for file in files:
