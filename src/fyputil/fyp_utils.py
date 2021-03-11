@@ -2,7 +2,7 @@
 # FYP UTILITIES
 #
 # TODO refactor to include a saner data pipeline 
-# TODO refactor to be only data utils - this is currently too general. 
+# TODO refactor to be only file utils - this is currently too general. 
 #==============================================================================
 
 import constants as c
@@ -133,7 +133,7 @@ def getCoords(img_path):
 
 # Get filepath of a given image 
 def getFilepath(coords):
-  return f"{c.png_dir}/{coords[0]}_{coords[1]}.png"
+  return f"{c.big_png_dir}/{coords[0]}_{coords[1]}.png"
 
 def imgExported(coords):
   return os.path.isfile(getFilepath(coords))
