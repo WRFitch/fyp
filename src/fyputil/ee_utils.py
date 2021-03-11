@@ -30,6 +30,7 @@ def exportTableFromImage(image, polygon, scale, folder="no_export_folder",
 # samples image into feature_collection. 
 # TODO rename to be a getDATATYPE, once we know the datatype returned from this.
 #      It's likely to be a FeatureCollection. 
+# TODO remove 
 def sample(img, region, scale):
   return img.sampleRegions(
       collection = region,
@@ -60,15 +61,17 @@ def getSqKmFromPoint(point):
 def getRangeFromPoint(point, range):
   return point.buffer(range).bounds()
 
-# Read in CSV from drive
-# This method is bad, and I should feel bad 
+# TODO remove in favour of getBigImgsFromDf()
 def getImgsFromCsv(csv_path, img):
+  # For each line in CSV, export a geotiff of the given coordinates.
+  # Buffer included to avoid usage limits. 
+
   with open(csv_path) as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     firstRow = True
   
-    # The number of simultaneous exports can't go over 3 or 4 without taking a 
-    # performance hit. 
+    # The number of simultaneous exports can't go over 3 or 4 without GEE 
+    # taking a performance hit. 
     concurrent_exports = 3
     export_buffer = []
 
@@ -87,7 +90,6 @@ def getImgsFromCsv(csv_path, img):
       if os.path.isfile(f"{c.png_dir}/{name}.png") or \
           os.path.isfile(f"{c.data_dir}/geotiff/{tifname}") or \
           os.path.isfile(f"{c.drive_path}{c.geotiff_dir}/{tifname}"):
-        # TODO update to include variable log levels
         print(f"skipping  {name} - file already exists!")
         continue
         
@@ -100,7 +102,7 @@ def getImgsFromCsv(csv_path, img):
       while len(export_buffer) >= concurrent_exports:
         time.sleep(5)
         # when the files stored in the export buffer are found in the filesystem, 
-        # remove them.
+        # remove them from buffer
         for filename in export_buffer:
           if os.path.isfile(f"{c.drive_path}{c.geotiff_dir}/{filename}"): 
             export_buffer.remove(filename)
@@ -115,7 +117,7 @@ def getBigImgsFromDf(df, img):
 
   for _, row in df.iterrows():
     coords = (row.longitude, row.latitude)
-    # Arbitrarily defining the pixels, this gives us 224px
+    # Arbitrarily defining the pixels, this gives us 224px.
     polygon = getRangeFromPoint(ee.Geometry.Point(coords), 700)
     name = f"{coords[0]}_{coords[1]}"
     tifname = name + ".tif"

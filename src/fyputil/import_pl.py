@@ -12,7 +12,7 @@ import pandas as pd
 ee.Authenticate()
 ee.Initialize()
 
-# These imports need to occur after authenitcation and initialisation
+# These imports need to occur after authentication and initialisation
 import ee_constants as eec
 import ee_utils as eeutil
 

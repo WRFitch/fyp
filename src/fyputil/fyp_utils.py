@@ -18,7 +18,8 @@ import pandas as pd
 from osgeo import gdal
 
 # Extracts lat and long volumes from .geo param in csv. 
-# TODO refactor to use pandas df joins, rather than iteration 
+# TODO refactor to use pandas df joins, rather than csv iteration 
+# TODO move to data_utils.py
 def parseCsvCoords(csv_path):
   print(csv_path)
   test_suffix = "_parsing_coordinates.csv"
@@ -73,21 +74,11 @@ def rmConversionArtifacts(path, rmTif = False, rmXml = False):
       fullpath = os.path.join(root, name)
       rmArtifact(fullpath, rmTif, rmXml)
 
+# TODO move to data_utils.py
 def geotiffToPng(tif_path, png_path = c.png_dir, rm_artifacts = False):
-  # Define rgb bands and file extension
-  #options_list = [
-  #  '-ot Byte',
-  #  '-of PNG',
-  #  '-b 4',
-  #  '-b 3',
-  #  '-b 2',
-  #  '-scale'
-  #]
-  #options_string = " ".join(options_list)
   options_string = '-ot Byte -of PNG -b 4 -b 3 -b 2 -scale'
   parent_path = os.path.join(c.drive_path, tif_path)
 
-  # Recursively walk through all files (this has to be simpler)
   for root, _, files in os.walk(parent_path, topdown=False):
     for name in files:
       full_path = os.path.join(root, name)
@@ -125,8 +116,6 @@ def moveFilesByExtension(src, dest, extension):
         print(f"moving files from {full_path} to {dest_path}")
         os.rename(full_path, dest_path)
 
-# TODO refactor the whole GHG dataframe chain. It's a mess. 
-
 # Get image coordinates from filename
 def getCoords(img_path):
   return list(map(float, img_path.split("/")[-1][0:-4].split("_")))
@@ -135,19 +124,17 @@ def getCoords(img_path):
 def getFilepath(coords):
   return f"{c.big_png_dir}/{coords[0]}_{coords[1]}.png"
 
+# Determine whether image has been exported
+# TODO currently very slow to fail - find a faster way of doing this. 
 def imgExported(coords):
   return os.path.isfile(getFilepath(coords))
 
 # Get the row from the given dataframe at the given coordinates.
-# We have to define rounded precision because floats suck. There should be a 
-# better way of doing this...
+# Rounded precision must be defined due to floating-point issues.
+# It would be better if this returned a list, rather than a sliced dataframe.
 def getValAt(coords, df, prec=10):
   return df.loc[(round(df[c.lon], prec) == round(coords[0], prec)) & \
                 (round(df[c.lat], prec) == round(coords[1], prec))]
-
-# TODO included for legacy, remove asap 
-#def normGhgDfProperly(ghg_df):
-#  return normGhgDf(ghg_df)
 
 def normGhgDf(ghg_df):
   for band in c.ghg_bands:
@@ -160,6 +147,7 @@ def normGhgDf(ghg_df):
 def deNormGhgPrediction(prediction, ghg_df):
   return deNormPrediction(prediction, ghg_df)
 
+# Denormalises predicted GHG values. 
 def deNormPrediction(prediction, ghg_df):
   denormed = []
   idx = 0
@@ -170,15 +158,19 @@ def deNormPrediction(prediction, ghg_df):
     idx += 1 
   return denormed
 
+# Get GHG values from dataframe based on image coordinates as stored in the 
+# given path. 
+# TODO optimise - this method is slow and clunky 
 def getGhgs(img_path, df): 
   coords = getCoords(str(img_path))
   ghgs = getValAt(coords, df)
   concentrations = ghgs[c.ghg_bands]
   if len(concentrations) == 0 : return None 
   if None in concentrations: return None
-  # There has to be a cleaner way to do this. Iterating through and then only getting the first line? really? 
+  # There has to be a cleaner way to do this 
   return [tuple(x) for x in concentrations.to_numpy()][0]
 
+#getGhgs as numpy array 
 def getGhgsAsArr(img_path, df):
   return np.array(getGhgs(img_path, df))
 
