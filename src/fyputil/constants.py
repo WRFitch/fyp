@@ -18,7 +18,7 @@ png_dir = f"{data_dir}/png"
 big_png_dir = f"{data_dir}/png_224"
 demo_dir = f"{drive_path}/demo_export"
 model_dir = f"{drive_path}/models"
-model_name = "resnet152_MRGHG_Demo1"
+model_name = "mrghg_060321-resnet152_increased_dataset_size_to_4k"
 ghg_csv = f"{data_dir}/ghgs.csv"
 
 CO_band = 'CO_column_number_density'
@@ -41,3 +41,4 @@ fomula_names = {
 lon = "longitude"
 lat = "latitude"
 
+brunel_coords = (-0.47278354461716354, 51.53325658151181)
