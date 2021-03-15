@@ -170,6 +170,14 @@ def getGhgs(img_path, df):
   # There has to be a cleaner way to do this 
   return [tuple(x) for x in concentrations.to_numpy()][0]
 
+# TODO test this method
+def getGhgsFaster(img_path, df):
+  coords = getCoords(str(img_path))
+  ghgs = getValAt(coords, df).squeeze()
+  if ghgs.empty: return None
+  if None in ghgs: return None
+  return np.array(ghgs) # TODO parse this however needed
+
 #getGhgs as numpy array 
 def getGhgsAsArr(img_path, df):
   return np.array(getGhgs(img_path, df))

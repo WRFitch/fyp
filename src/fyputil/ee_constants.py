@@ -237,7 +237,8 @@ folium.TileLayer(
     attr = map_attr,
     overlay = True,
     name = 'Carbon Monoxide',
-    opacity = layerOpacity
+    opacity = layerOpacity,
+    show = False
   ).add_to(map)
 
 folium.TileLayer(
@@ -245,7 +246,8 @@ folium.TileLayer(
     attr = map_attr,
     overlay = True,
     name = 'Formaldehyde',
-    opacity = layerOpacity
+    opacity = layerOpacity,
+    show = False
   ).add_to(map)
 
 folium.TileLayer(
@@ -253,7 +255,8 @@ folium.TileLayer(
     attr = map_attr,
     overlay = True,
     name = 'Nitrogen Dioxide',
-    opacity = layerOpacity
+    opacity = layerOpacity,
+    show = False
   ).add_to(map)
 
 folium.TileLayer(
@@ -261,7 +264,8 @@ folium.TileLayer(
     attr = map_attr,
     overlay = True,
     name = 'Ozone',
-    opacity = layerOpacity
+    opacity = layerOpacity,
+    show = False
   ).add_to(map)
 
 folium.TileLayer(
@@ -269,7 +273,8 @@ folium.TileLayer(
     attr = map_attr,
     overlay = True,
     name = 'Sulphur Dioxide',
-    opacity = layerOpacity
+    opacity = layerOpacity,
+    show = False
   ).add_to(map)
 
 folium.TileLayer(
@@ -277,7 +282,8 @@ folium.TileLayer(
     attr = map_attr,
     overlay = True,
     name = 'Methane',
-    opacity = layerOpacity
+    opacity = layerOpacity,
+    show = False
   ).add_to(map)
   
 map.add_child(folium.LayerControl())
