@@ -43,7 +43,7 @@ class EnsembleModel:
 # get average Root Mean Squared Error values for the given model 
 def getModelRmse(model, ghg_df, modulus=1, err_df=None):
   # Return a RMSE value for each GHG in the model's predicted values. 
-  if err_df == None:
+  if err_df is None:
     err_df = getErrs(model, ghg_df, modulus)
 
   rtnval = []
@@ -65,8 +65,9 @@ def getPreds(model, ghg_df, modulus=1):
   return pred_df
 
 def getErrs(model, df, modulus=1, preds_df=None):
-  # Return a dataframe containing the difference between each prediction and the original value
-  if preds_df == None:
+  # Return a dataframe containing the difference between each prediction and 
+  # the original value
+  if preds_df is None:
     preds_df = getPreds(model, df, modulus)
   return fyputil.getDiffs(preds_df, df)
 
