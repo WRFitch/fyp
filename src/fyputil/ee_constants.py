@@ -29,11 +29,18 @@ fs5_SO2 = ee.FeatureCollection("COPERNICUS/S5P/OFFL/L3_SO2")
 fs5_CH4 = ee.FeatureCollection("COPERNICUS/S5P/OFFL/L3_CH4")
 
 
-# Could the start and end dates be shifted or focused on one area, so emissions can be monitored across the seasons? 
+# Could the start and end dates be shifted or focused on one area, so emissions
+# can be monitored across the seasons? 
 # Would that even be useful? 
 start_date = '2020-01-01'
 end_date = '2020-12-31'
+
+# Visualisation heatmap libraries
 vis_palette = ['black', 'blue', 'purple', 'cyan', 'green', 'yellow', 'red']
+hmgrad_high = {0:'purple', 0.5:'blue', 0.6:'turquoise', 0.7:'lime', 
+    0.8:'yellow', 0.9:'orange', 1:'red'}
+hmgrad_even = {0:'purple', 0.16:'blue', 0.33:'turquoise', 0.5:'lime', 
+    0.67:'yellow', 0.84:'orange', 1:'red'}
 
 # polygon boundary object library - separate import? 
 great_britain = ee.Geometry.Polygon(
