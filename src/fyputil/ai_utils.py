@@ -66,7 +66,7 @@ def getPreds(model, ghg_df, modulus=1):
 
 def getErrs(model, df, modulus=1, preds_df=None):
   # Return a dataframe containing the difference between each prediction and the original value
-  if preds_df.empty:
+  if preds_df == None:
     preds_df = getPreds(model, df, modulus)
   return fyputil.getDiffs(preds_df, df)
 
