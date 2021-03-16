@@ -53,7 +53,7 @@ def getModelRmse(model, ghg_df, modulus=1, err_df=None):
 
 def getPreds(model, ghg_df, modulus=1):
   # Return a dataframe containing the model predictions from the given dataframe
-  pred_df = pd.DataFrame(columns=c.ghg_bands)
+  pred_df = pd.DataFrame(columns = [c.lon, c.lat] + c.ghg_bands)
   mod = 0
   for _, row in ghg_df.iterrows():
     coords = (row.longitude, row.latitude)
