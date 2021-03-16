@@ -11,6 +11,7 @@ local_drive = "/home/will/drive/"
 if os.environ.get('USERNAME') == 'will':
   drive_path = local_drive
 
+# define filepath utilities 
 export_dir = "img_export"
 geotiff_dir = "geotiff_export"
 data_dir = f"{drive_path}{export_dir}"
@@ -18,7 +19,7 @@ png_dir = f"{data_dir}/png"
 big_png_dir = f"{data_dir}/png_224"
 demo_dir = f"{drive_path}/demo_export"
 model_dir = f"{drive_path}/models"
-model_name = "mrghg_060321-resnet152_increased_dataset_size_to_4k"
+model_name = "140321_add-normalisation_bs-128_trained-some-more"
 ghg_csv = f"{data_dir}/ghgs.csv"
 
 CO_band = 'CO_column_number_density'
@@ -41,4 +42,6 @@ fomula_names = {
 lon = "longitude"
 lat = "latitude"
 
+# Though this is coordinate data, it is included here so we don't always have 
+# to import, authenticate, and initialize EE if we want to test something. 
 brunel_coords = (-0.47278354461716354, 51.53325658151181)

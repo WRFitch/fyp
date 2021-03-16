@@ -1,5 +1,6 @@
 #==============================================================================
 # Earth Engine Constants
+#
 # To use:
 # pip install earthengine-api
 # ee.Authenticate()
@@ -101,8 +102,8 @@ south_east =  ee.Geometry.Polygon(
 #      the rest of the world. 
 # TODO analyse whether it makes sense to analyse these on a highly localised level
 
-# pre-filter to remove clouds - we can add them back in as data points from 
-# sentinel 5 if necessary
+# pre-filter function to remove clouds from satellite imagery - we can add them
+# back in as data points from sentinel 5 if necessary
 def maskS2clouds(image) :
   qa = image.select('QA60')
 
@@ -148,9 +149,9 @@ CH4_img = s5_CH4.filterDate(start_date, end_date) \
 
 ghg_imgs = [CO_img, HCHO_img, NO2_img, O3_img, SO2_img, CH4_img]
 
-
 # Define IDs for each GHG
-# Minmax scale is a bit off - recalibrate for my datasets 
+# Minmax scale is a bit off - recalibrate for my datasets to improve 
+# visualisation
 s2_id = s2_img.getMapId({'bands': ['B4', 'B3', 'B2'], \
                         'min': 0, \
                         'max': 0.3})
@@ -216,14 +217,12 @@ CH4_fc = fs5_CH4.filterDate(start_date, end_date) \
 ghg_fcs = [CO_fc, HCHO_fc, NO2_fc, O3_fc, SO2_fc, CH4_fc]
 
 # Visualise data on a Folium map 
-# Attribution has to stay earthengine.google.com, since that's where these maps came from. 
 map_attr = 'Map Data &copy; <a href="https://earthengine.google.com/">Google Earth Engine</a>'
 layerOpacity = 0.5
 
 map = folium.Map(
     location = [51.5, 0.1], 
     prefer_canvas = True)
-
 
 folium.TileLayer(
     tiles = s2_id['tile_fetcher'].url_format,

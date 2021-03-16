@@ -17,8 +17,8 @@ import pandas as pd
 # TODO Currently no easy one-line import for host pc 
 from osgeo import gdal
 
-# Extracts lat and long volumes from .geo param in csv. 
-# TODO refactor to use pandas df joins, rather than csv iteration 
+# Extracts lat and long volumes from .geo param in csv, which is stored as json
+# TODO refactor to use pandas df joins rather than csv iteration 
 # TODO move to data_utils.py
 def parseCsvCoords(csv_path):
   print(csv_path)
@@ -64,6 +64,7 @@ def rmArtifact(artifact_path, rmTif = False, rmXml = False):
     os.remove(artifact_path)
 
 # TODO move to file_utils.py
+# Removes conversion artifacts if rmTif or rmXml are true 
 def rmConversionArtifacts(path, rmTif = False, rmXml = False):
   # No point checking all these files if we're not going to do anything 
   if not (rmTif or rmXml): return
@@ -75,7 +76,10 @@ def rmConversionArtifacts(path, rmTif = False, rmXml = False):
       rmArtifact(fullpath, rmTif, rmXml)
 
 # TODO move to data_utils.py
+# TODO small png dir used as default - replace with large
+# Converts GeoTIFF files to PNG 
 def geotiffToPng(tif_path, png_path = c.png_dir, rm_artifacts = False):
+  # gdal translate options, defining that we're using a PNG based on bands 4,3,2
   options_string = '-ot Byte -of PNG -b 4 -b 3 -b 2 -scale'
   parent_path = os.path.join(c.drive_path, tif_path)
 
@@ -100,6 +104,8 @@ def geotiffToPng(tif_path, png_path = c.png_dir, rm_artifacts = False):
         options = options_string
       )
       print(f"Converted {filename} from GeoTIFF to PNG")
+      # TODO this is never used, and removes GeoTIFFS which are difficult to 
+      # get and worth keeping. Remove this line & functionality. 
       if rm_artifacts: rmArtifact(full_path, True, True)
 
 # TODO move to file_utils.py
@@ -120,22 +126,23 @@ def moveFilesByExtension(src, dest, extension):
 def getCoords(img_path):
   return list(map(float, img_path.split("/")[-1][0:-4].split("_")))
 
-# Get filepath of a given image 
+# Get expected file of the image that shows the given coordinates. 
 def getFilepath(coords):
   return f"{c.big_png_dir}/{coords[0]}_{coords[1]}.png"
 
-# Determine whether image has been exported
+# Determine whether image at given coords has been exported
 # TODO currently very slow to fail - find a faster way of doing this. 
 def imgExported(coords):
   return os.path.isfile(getFilepath(coords))
 
 # Get the row from the given dataframe at the given coordinates.
 # Rounded precision must be defined due to floating-point issues.
-# It would be better if this returned a list, rather than a sliced dataframe.
+# It may be better if this returned a list, rather than a sliced dataframe.
 def getValAt(coords, df, prec=10):
   return df.loc[(round(df[c.lon], prec) == round(coords[0], prec)) & \
                 (round(df[c.lat], prec) == round(coords[1], prec))]
 
+# Normalises a dataframe to keep values between 0 and 100
 def normGhgDf(ghg_df):
   for band in c.ghg_bands:
     max = ghg_df[band].max()
@@ -161,13 +168,15 @@ def deNormPrediction(prediction, ghg_df):
 # Get GHG values from dataframe based on image coordinates as stored in the 
 # given path. 
 # TODO optimise - this method is slow and clunky 
+# TODO refactor the entire codebase to avoid using this method as much as 
+# possible
 def getGhgs(img_path, df): 
   coords = getCoords(str(img_path))
   ghgs = getValAt(coords, df)
   concentrations = ghgs[c.ghg_bands]
   if len(concentrations) == 0 : return None 
   if None in concentrations: return None
-  # There has to be a cleaner way to do this 
+  # TODO There has to be a cleaner way to do this 
   return [tuple(x) for x in concentrations.to_numpy()][0]
 
 # TODO test this method
@@ -176,9 +185,9 @@ def getGhgsFaster(img_path, df):
   ghgs = getValAt(coords, df).squeeze()
   if ghgs.empty: return None
   if None in ghgs: return None
-  return np.array(ghgs) # TODO parse this however needed
+  return np.array(ghgs) # TODO update this to parse however needed
 
-#getGhgs as numpy array 
+#getGhgs as numpy array for multivariate regression
 def getGhgsAsArr(img_path, df):
   return np.array(getGhgs(img_path, df))
 
@@ -188,6 +197,8 @@ def imgIsInDf(img_path, df):
   return not getValAt(coords, df).empty
 
 # TODO move to file_utils.py
+# Remove duplicated files, as defined by the "(1)" notation used to denote 
+# copies in linux 
 def rmBracketedDupe(dir): 
   count = 0
   for root, dir, files in os.walk(dir):
@@ -198,3 +209,18 @@ def rmBracketedDupe(dir):
         count += 1
   print(count)
   
+# TODO move to data_utils.py
+def getDiffs(pred_df, actual_df):
+  # Return a dataframe containing the differences between coordinate-indexed 
+  # values in two dataframes. 
+  diffs = pd.DataFrame(columns = [c.lon, c.lat] + c.ghg_bands)
+  for _, row in pred_df.iterrows():
+    coords = (row.longitude, row.latitude)
+    # Keeping this in index lockstep would be an order of magnitude more 
+    # efficient than this bodged lookup. 
+    actual = getValAt(coords, actual_df)[c.ghg_bands].squeeze()
+    prediction = row[2:]
+    if actual.empty: continue
+    differences = [pred - act for pred, act in zip(prediction, actual)]
+    diffs.loc[len(diffs)] = list(coords) + differences
+  return diffs
