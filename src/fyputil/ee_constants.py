@@ -11,6 +11,8 @@ import constants as c
 import ee 
 import folium
 
+from folium.plugins import HeatMap
+
 # Define collections for each dataset to be used 
 s2 = ee.ImageCollection("COPERNICUS/S2_SR")
 s5_CO = ee.ImageCollection("COPERNICUS/S5P/OFFL/L3_CO")
@@ -156,6 +158,7 @@ CH4_img = s5_CH4.filterDate(start_date, end_date) \
 
 ghg_imgs = [CO_img, HCHO_img, NO2_img, O3_img, SO2_img, CH4_img]
 
+
 # Define IDs for each GHG
 # Minmax scale is a bit off - recalibrate for my datasets to improve 
 # visualisation
@@ -222,6 +225,7 @@ CH4_fc = fs5_CH4.filterDate(start_date, end_date) \
               .select(c.CH4_band)
 
 ghg_fcs = [CO_fc, HCHO_fc, NO2_fc, O3_fc, SO2_fc, CH4_fc]
+
 
 # Visualise data on a Folium map 
 map_attr = 'Map Data &copy; <a href="https://earthengine.google.com/">Google Earth Engine</a>'
@@ -293,3 +297,41 @@ folium.TileLayer(
   ).add_to(map)
   
 map.add_child(folium.LayerControl())
+
+def getErrMap(abs_errs):
+  for ghg in c.ghg_bands:
+    abs_errs[ghg] = abs_errs[ghg].apply(abs)
+  abs_errs['avg'] = abs_errs[c.ghg_bands].mean(axis=1)
+
+  errmap = folium.Map(
+      location = [51.5, 0.1], 
+      prefer_canvas = True)
+
+  folium.TileLayer(
+      tiles = s2_id['tile_fetcher'].url_format,
+      attr = map_attr,
+      overlay = True,
+      name = 'satellite photography median composite '
+    ).add_to(errmap)
+
+  for ghg in c.ghg_bands:
+    subset = abs_errs[[c.lat, c.lon, ghg]]
+    folium.plugins.HeatMap(
+        data = subset.values,
+        name = f"{ghg}_errs",
+        show = False,
+        gradient = hmgrad_high, 
+        min_opacity = 0.05
+    ).add_to(errmap)
+
+  folium.plugins.HeatMap(
+      data = abs_errs[[c.lat, c.lon, 'avg']].values,
+      name = "avg_errs",
+      show = False,
+      gradient = hmgrad_high, 
+      min_opacity = 0.05
+  ).add_to(errmap)
+
+  errmap.add_child(folium.LayerControl())
+  
+  return errmap 
