@@ -6,8 +6,8 @@ import os
 
 drive_path = "/content/drive/MyDrive/"
 local_drive = "/home/will/drive/"
-# Hacky way of having automatic userspace changes. It's not scalable, but it's
-# ok for hacking around. 
+# Hacky way of having automatic userspace changes for local import scripts. 
+# It's not scalable, but it's ok for hacking around. 
 if os.environ.get('USERNAME') == 'will':
   drive_path = local_drive
 

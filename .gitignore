@@ -2,6 +2,9 @@
 /data/*
 datasets/ghgs/*
 
+# Exported model
+results/model/model.pkl
+
 # code
 *.pyc
 
