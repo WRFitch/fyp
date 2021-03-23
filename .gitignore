@@ -1,6 +1,6 @@
 # data
 /data/*
-datasets/ghgs/*
+#datasets/ghgs/*
 
 # Exported model
 results/model/model.pkl
