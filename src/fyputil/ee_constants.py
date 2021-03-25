@@ -115,6 +115,7 @@ south_east =  ee.Geometry.Polygon(
 
 # pre-filter function to remove clouds from satellite imagery - we can add them
 # back in as data points from sentinel 5 if necessary
+# Code sourced from demonstration at https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S2_SR
 def maskS2clouds(image) :
   qa = image.select('QA60')
 
