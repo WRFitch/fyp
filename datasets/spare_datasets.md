@@ -1,7 +1,5 @@
 # A list of useful, **free** datasets. 
 
-I should probably check Kaggle and steal everything I can get my hands on (legally). 
-
 - [Data.gov - all the United States Government's data, freely available! (apart from your browser history)](https://catalog.data.gov/dataset#sec-groups)
 - [Some big free data sets from smartdatacollective.com](https://www.smartdatacollective.com/big-data-20-free-big-data-sources-everyone-should-know/)
 - [American climate data from the NOAA](https://www.ncdc.noaa.gov/cdo-web/datasets "wow it would be great if they actually used this")
