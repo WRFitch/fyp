@@ -30,7 +30,6 @@ def exportTableFromImage(image, polygon, scale, folder="no_export_folder",
 # samples image into feature_collection. 
 # TODO rename to be a getDATATYPE, once we know the datatype returned from this.
 #      It's likely to be a FeatureCollection. 
-# TODO remove 
 def sample(img, region, scale):
   return img.sampleRegions(
       collection = region,
@@ -54,7 +53,6 @@ def exportGeotiff(image, polygon, scale, folder="no_export_folder",
   ).start()
 
 # Gets a square kilometer with the given point object as the centroid. 
-# TODO is this definitely a square kilometer? 
 def getSqKmFromPoint(point):
   return getRangeFromPoint(point, 500)
 
@@ -80,7 +78,7 @@ def getImgsFromCsv(csv_path, img):
         firstRow = False
         continue
 
-      # coords are stored as [LONGITUDE, LATITUDE]
+      # coords are stored as (LONGITUDE, LATITUDE)
       coords = json.loads(row[2]).get("coordinates")
       polygon = getSqKmFromPoint(ee.Geometry.Point(coords))
       name = f"{coords[0]}_{coords[1]}"

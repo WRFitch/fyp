@@ -39,7 +39,7 @@ end_date = '2020-12-31'
 
 proj = 'EPSG:3857'
 
-# Visualisation heatmap libraries
+# Visualisation heatmap dicts
 vis_palette = ['black', 'blue', 'purple', 'cyan', 'green', 'yellow', 'red']
 hmgrad_high = {0:'purple', 0.5:'blue', 0.6:'turquoise', 0.7:'lime', 
     0.8:'yellow', 0.9:'orange', 1:'red'}
